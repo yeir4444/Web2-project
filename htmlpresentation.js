@@ -1,4 +1,4 @@
-const express = require("express");
+ilconst express = require("express");
 const handlebars = require("express-handlebars");
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -12,10 +12,10 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     
     try {
-        let sessionId = await business.login(username, password);
+        let sessionId = await business.login(email, password);
         if (sessionId) {
             res.cookie('sessionId', sessionId, {httpOnly: true});
             res.send('Login successful');
