@@ -28,7 +28,6 @@ async function registerUser(username, email, password){
         await sendVerificationEmail(email, verificationToken);
         return { message: "User registered successfully. Please check your email to verify your account."};
     } catch (error){
-        console.error("Error registering user:", error);
         return{ error: "Failed to register user. Please try again later."};
     }
 }
@@ -42,7 +41,6 @@ async function verifyUser(verificationToken) {
         }
         return { error: "Invalid or expired verification token." };
     } catch (error) {
-        console.error("Error verifying user:", error);
         return { error: "Failed to verify user. Please try again later." };
     }
 }
@@ -57,7 +55,6 @@ async function resetPassword(email, newPassword) {
         }
         return { error: "User not found." };
     } catch (error) {
-        console.error("Error resetting password:", error);
         return { error: "Failed to reset password. Please try again later." };
     }
 }
