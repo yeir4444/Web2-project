@@ -65,5 +65,6 @@ async function resetPassword(email, newPassword) {
 module.exports = {
     login,
     registerUser,
-    VerifyUser
+    VerifyUser,
+    resetPassword
 };
