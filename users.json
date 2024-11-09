@@ -1,0 +1,38 @@
+[
+    {
+      "_id": "1",
+      "username": "johndoe",
+      "email": "johndoe@example.com",
+      "password": "$2a$10$2Ylw",
+      "role": "standard"
+    },
+    {
+      "_id": "2",
+      "username": "janedoe",
+      "email": "janedoe@example.com",
+      "password": "10$2N1yYoxr5Hp",
+      "role": "admin"
+    },
+    {
+      "_id": "3",
+      "username": "alexsmith",
+      "email": "alexsmith@example.com",
+      "password": "6HRHAdh4",
+      "role": "standard"
+    },
+    {
+      "_id": "4",
+      "username": "emilyjones",
+      "email": "emilyjones@example.com",
+      "password": "FlRjv1w2",
+      "role": "standard"
+    },
+    {
+      "_id": "5",
+      "username": "michaelwilliams",
+      "email": "michaelwilliams@example.com",
+      "password": "zMH5uj3Yq",
+      "role": "standard"
+    }
+]
+  
