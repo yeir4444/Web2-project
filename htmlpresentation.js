@@ -17,13 +17,13 @@ app.set('view engine', 'handlebars');
 app.engine('handlebars', handlebars({ defaultLayout: 'main' }));
 
 // Route to display the registration form
-app.get('/register', (req, res) => {
+app.get('/registration', (req, res) => {
     res.render('registration'); // Renders the registration form template
 });
 
 // Handle form submission for registration
-app.post('/register', async (req, res) => {
-    const { username, email, password, confirmPassword } = req.body;
+app.post('/registration', async (req, res) => {
+    const { username, email, password, role } = req.body;
 
     // Basic validation: Check if passwords match
     if (password !== confirmPassword) {
@@ -32,7 +32,7 @@ app.post('/register', async (req, res) => {
 
     try {
         // Register new user
-        const result = await business.registerUser(username, email, password);
+        const result = await business.registerUser(username, email, password, role);
 
         // Send success or error message based on the result
         if (result.error) {
