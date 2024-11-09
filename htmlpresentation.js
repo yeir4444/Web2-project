@@ -6,6 +6,8 @@ const business = require('./business');
 
 const app = express();
 
+
+
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -15,6 +17,38 @@ app.use(cookieParser());
 app.set('views', __dirname + "/templates");
 app.set('view engine', 'handlebars');
 app.engine('handlebars', handlebars({ defaultLayout: 'main' }));
+
+
+// GET route for Registration
+app.get('/register', (req, res) => {
+    res.render('registration'); // Renders the registration form template
+});
+
+
+// POST Function (Handle form submission)
+app.post('/register', async (req, res) => {
+    const { username, email, password, confirmPassword } = req.body;
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+        return res.send('Passwords do not match');
+    }
+
+    try {
+        // Use the registerUser function to create a new user
+        const result = await business.registerUser(username, email, password);
+
+        // If there's an error show it otherwise, confirm success
+        if (result.error) {
+            res.send(result.error); // Error in registration
+        } else {
+            res.send(result.message); // Success message
+        }
+    } catch (error) {
+        res.send('An error occurred. Please try again.');
+    }
+});
+
 
 // Routes
 app.get('/login', (req, res) => {
@@ -41,3 +75,4 @@ app.post('/login', async (req, res) => {
 app.listen(8000, () => {
     console.log("Server running on port 8000");
 });
+
