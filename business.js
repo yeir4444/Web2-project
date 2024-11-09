@@ -12,7 +12,7 @@ async function login(email, password) {
     return null;
 }
 
-async function registerUser(username, email, password){
+async function registerUser(username, email, password, role){
     try{
         const hashedPassword = await bcrypt.hash(password, 10);
         const verificationToken = uuidv4();
@@ -20,6 +20,7 @@ async function registerUser(username, email, password){
             username,
             email,
             password: hashedPassword,
+            role,
             isVerified: false,
             verificationToken
         };
