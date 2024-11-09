@@ -16,6 +16,14 @@ async function updateUserVerification(userId){
   return usersCollection.updateOne({ _id: new ObjectId(userId) }, { $set: { isVerified: true } });
 };
 
+async function createSession(userId) {
+  session = await db.collection('sessions').insertOne({
+    userId: userId,
+    createdAt: new Date()
+  });
+  return session;
+}
+
 module.exports= { createUser, 
                  findUserByEmail, 
                  updateUserVerification};
