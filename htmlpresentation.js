@@ -2,72 +2,70 @@ const express = require("express");
 const handlebars = require("express-handlebars");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const business = require('./business');
+const business = require('./business'); 
 
 const app = express();
 
-
-
-// Middleware
+// Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// View engine setup
+// Set up view engine
 app.set('views', __dirname + "/templates");
 app.set('view engine', 'handlebars');
 app.engine('handlebars', handlebars({ defaultLayout: 'main' }));
 
-
-// GET route for Registration
+// Route to display the registration form
 app.get('/register', (req, res) => {
     res.render('registration'); // Renders the registration form template
 });
 
-
-// POST Function (Handle form submission)
+// Handle form submission for registration
 app.post('/register', async (req, res) => {
     const { username, email, password, confirmPassword } = req.body;
 
-    // Check if passwords match
+    // Basic validation: Check if passwords match
     if (password !== confirmPassword) {
         return res.send('Passwords do not match');
     }
 
     try {
-        // Use the registerUser function to create a new user
+        // Register new user
         const result = await business.registerUser(username, email, password);
 
-        // If there's an error show it otherwise, confirm success
+        // Send success or error message based on the result
         if (result.error) {
-            res.send(result.error); // Error in registration
+            res.send(result.error); // Display error in registration
         } else {
-            res.send(result.message); // Success message
+            res.send(result.message); // Display success message
         }
     } catch (error) {
         res.send('An error occurred. Please try again.');
     }
 });
 
-
-// Routes
+// Route to display the login page
 app.get('/login', (req, res) => {
-    res.render('login'); // Rendering the login page
+    res.render('login'); // Render the login page template
 });
 
+// Handle login form submission
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Attempt login
         let sessionId = await business.login(email, password);
         if (sessionId) {
+            // Set session cookie if login is successful
             res.cookie('sessionId', sessionId, { httpOnly: true });
-            res.redirect('/account'); // Redirect to account after successful login
+            res.redirect('/account'); // Redirect to account page after successful login
         } else {
-            res.status(400).send('Invalid credentials');
+            res.send('Invalid credentials'); // Show invalid credentials message
         }
     } catch (error) {
-        res.status(500).send('Login process error');
+        res.send('Login process error');
     }
 });
 
@@ -75,4 +73,3 @@ app.post('/login', async (req, res) => {
 app.listen(8000, () => {
     console.log("Server running on port 8000");
 });
-
