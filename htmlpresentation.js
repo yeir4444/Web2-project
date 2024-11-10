@@ -10,7 +10,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
+     
 // Set up view engine
 app.set('views', __dirname + "/templates");
 app.set('view engine', 'handlebars');
