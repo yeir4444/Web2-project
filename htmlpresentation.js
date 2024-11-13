@@ -1,75 +1,89 @@
 const express = require("express");
-const handlebars = require("express-handlebars");
+const { engine } = require("express-handlebars");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const business = require('./business'); 
+const csurf = require("csurf");
+const business = require('./business');
 
 const app = express();
 
 // Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 app.use(cookieParser());
-     
-// Set up view engine
-app.set('views', __dirname + "/templates");
+
+// Static folder for CSS and other assets
+app.use(express.static(__dirname + '/public'));
+
+// Setting up CSRF protection
+const csrfProtection = csurf({ cookie: true });
+app.use(csrfProtection);
+
+// Setting up view engine
+app.engine('handlebars', engine({ defaultLayout: 'layout' }));
 app.set('view engine', 'handlebars');
-app.engine('handlebars', handlebars({ defaultLayout: 'main' }));
+app.set('views', __dirname + "/templates");
 
-// Route to display the registration form
-app.get('/registration', (req, res) => {
-    res.render('registration'); // Renders the registration form template
+// Redirecting root to login
+app.get('/', (req, res) => res.redirect('/login'));
+
+// Routes
+app.get('/registration', csrfProtection, (req, res) => {
+    res.render('registration', { csrfToken: req.csrfToken() });
 });
 
-// Handle form submission for registration
-app.post('/registration', async (req, res) => {
-    const { username, email, password, role } = req.body;
+app.post('/registration', csrfProtection, async (req, res) => {
+    const { username, email, password, confirmPassword, role } = req.body;
 
-    // Basic validation: Check if passwords match
     if (password !== confirmPassword) {
-        return res.send('Passwords do not match');
+        return res.render('registration', { error: 'Passwords do not match', csrfToken: req.csrfToken() });
     }
 
-    try {
-        // Register new user
-        const result = await business.registerUser(username, email, password, role);
-
-        // Send success or error message based on the result
-        if (result.error) {
-            res.send(result.error); // Display error in registration
-        } else {
-            res.send(result.message); // Display success message
-        }
-    } catch (error) {
-        res.send('An error occurred. Please try again.');
+    const result = await business.registerUser(username, email, password, role);
+    if (result.error) {
+        res.render('registration', { error: result.error, csrfToken: req.csrfToken() });
+    } else {
+        res.render('registration', { message: result.message, csrfToken: req.csrfToken() });
     }
 });
 
-// Route to display the login page
-app.get('/login', (req, res) => {
-    res.render('login'); // Render the login page template
-});
+app.get('/login', csrfProtection, (req, res) => res.render('login', { csrfToken: req.csrfToken() }));
 
-// Handle login form submission
-app.post('/login', async (req, res) => {
+app.post('/login', csrfProtection, async (req, res) => {
     const { email, password } = req.body;
+    const sessionId = await business.login(email, password);
+
+    if (sessionId) {
+        res.cookie('sessionId', sessionId, { httpOnly: true });
+        res.redirect('/account');
+    } else {
+        res.render('login', { error: 'Invalid credentials. Please try again.', csrfToken: req.csrfToken() });
+    }
+});
+
+app.get('/account', async (req, res) => {
+    const sessionId = req.cookies.sessionId;
+    if (!sessionId) {
+        return res.redirect('/login');
+    }
 
     try {
-        // Attempt login
-        let sessionId = await business.login(email, password);
-        if (sessionId) {
-            // Set session cookie if login is successful
-            res.cookie('sessionId', sessionId, { httpOnly: true });
-            res.redirect('/account'); // Redirect to account page after successful login
+        const user = await business.getUserBySession(sessionId);
+        if (user) {
+            res.render('account', { user });
         } else {
-            res.send('Invalid credentials'); // Show invalid credentials message
+            res.clearCookie('sessionId');
+            res.redirect('/login');
         }
     } catch (error) {
-        res.send('Login process error');
+        res.send('An error occurred while fetching account information.');
     }
+});
+
+// Logout route
+app.get('/logout', (req, res) => {
+    res.clearCookie('sessionId');
+    res.redirect('/login');
 });
 
 // Start the server
-app.listen(8000, () => {
-    console.log("Server running on port 8000");
-});
+app.listen(8000, () => console.log("Server running on port 8000"));
