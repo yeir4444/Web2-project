@@ -1,38 +1,82 @@
 [
-    {
-      "_id": "1",
-      "username": "johndoe",
-      "email": "johndoe@example.com",
-      "password": "$2a$10$2Ylw",
-      "role": "standard"
-    },
-    {
-      "_id": "2",
-      "username": "janedoe",
-      "email": "janedoe@example.com",
-      "password": "10$2N1yYoxr5Hp",
-      "role": "admin"
-    },
-    {
-      "_id": "3",
-      "username": "alexsmith",
-      "email": "alexsmith@example.com",
-      "password": "6HRHAdh4",
-      "role": "standard"
-    },
-    {
-      "_id": "4",
-      "username": "emilyjones",
-      "email": "emilyjones@example.com",
-      "password": "FlRjv1w2",
-      "role": "standard"
-    },
-    {
-      "_id": "5",
-      "username": "michaelwilliams",
-      "email": "michaelwilliams@example.com",
-      "password": "zMH5uj3Yq",
-      "role": "standard"
-    }
+  {
+    "username": "user1",
+    "email": "user1@example.com",
+    "password": "password123",
+    "role": "standard",
+    "isVerified": true,
+    "verificationToken": "d8f42e1e-d8f3-4e0f-9c1c-65d2a5a06c33"
+  },
+  {
+    "username": "adminUser",
+    "email": "admin@example.com",
+    "password": "adminpass456",
+    "role": "admin",
+    "isVerified": false,
+    "verificationToken": "a4b842e0-df6d-42f3-bf82-3f431b5d9e62"
+  },
+  {
+    "username": "user2",
+    "email": "user2@example.com",
+    "password": "mypassword789",
+    "role": "standard",
+    "isVerified": false,
+    "verificationToken": "9a2f80b3-6d3b-4ea8-8cd5-9f832af9cb7a"
+  },
+  {
+    "username": "user3",
+    "email": "user3@example.com",
+    "password": "securepass321",
+    "role": "standard",
+    "isVerified": false,
+    "verificationToken": "ac92ef03-4b29-4896-bd56-412e30ab1f9e"
+  },
+  {
+    "username": "user4",
+    "email": "user4@example.com",
+    "password": "adminsecure654",
+    "role": "admin",
+    "isVerified": false,
+    "verificationToken": "f4d2a4b8-e67d-46a7-b469-99a0f47d0f15"
+  },
+  {
+    "username": "user5",
+    "email": "user5@example.com",
+    "password": "userpass123",
+    "role": "standard",
+    "isVerified": false,
+    "verificationToken": "3c8b79b9-7f73-4292-8439-55a8f7935463"
+  },
+  {
+    "username": "user6",
+    "email": "user6@example.com",
+    "password": "adminkey789",
+    "role": "admin",
+    "isVerified": false,
+    "verificationToken": "2a3d89d5-cb1b-4997-a0a6-cf9de9730d4b"
+  },
+  {
+    "username": "user7",
+    "email": "user7@example.com",
+    "password": "myuserpass456",
+    "role": "standard",
+    "isVerified": false,
+    "verificationToken": "c4a36c29-8124-44f8-9f0c-fb1c9ecb0d8e"
+  },
+  {
+    "username": "user8",
+    "email": "user8@example.com",
+    "password": "password456",
+    "role": "standard",
+    "isVerified": false,
+    "verificationToken": "de3f8e69-3b7f-41ab-a5d9-2d736b987d5f"
+  },
+  {
+    "username": "user9",
+    "email": "user9@example.com",
+    "password": "adminkey123",
+    "role": "admin",
+    "isVerified": false,
+    "verificationToken": "81a62b7a-3029-4e5d-8fe6-68d5f5d24a3a"
+  }
 ]
-  
