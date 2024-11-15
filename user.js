@@ -8,7 +8,7 @@ let sessionsCollection;
 
 async function connectToDatabase() {
     if (!client) {
-        client = new MongoClient('mongodb+srv://60301815:60301815@60301815.ndtwl.mongodb.net/'); // change this to your connection string and it should work
+        client = new MongoClient(''); // change this to your connection string and it should work
         await client.connect();
         db = client.db('language_exchange');
         usersCollection = db.collection('users');
