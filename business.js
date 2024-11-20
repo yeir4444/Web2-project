@@ -1,155 +1,127 @@
 const user = require('./user'); // Persistence layer
 const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
-const sendVerificationEmail = require('./email');
+const nodemailer = require('nodemailer')
 
-
-/**
- * Hashes a password using PBKDF2 with a random salt.
- * @param {string} password - The plaintext password to hash.
- * @returns {string} The hashed password in the format `salt:hash`.
- */
-function hashPassword(password) {
-    const salt = crypto.randomBytes(16).toString('hex'); 
-    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha256').toString('hex'); 
-    return `${salt}:${hash}`; 
-}
-
-
-/**
- * Verifies if the given password matches the stored hashed password.
- * @param {string} password - The plaintext password to verify.
- * @param {string} storedPassword - The stored password in the format `salt:hash`.
- * @returns {boolean} True if the password matches, false otherwise.
- */
-function verifyPassword(password, storedPassword) {
-    const [salt, hash] = storedPassword.split(':');
-    const hashedPassword = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha256').toString('hex'); 
-    return hash === hashedPassword;
-}
-
-
-/**
- * Authenticates a user by email and password, and creates a session if login is successful.
- * @param {string} email - The user's email.
- * @param {string} password - The user's plaintext password.
- * @returns {Promise<string|null>} The session ID if login is successful, or null otherwise.
- */
 async function login(email, password) {
     const userRecord = await user.findUserByEmail(email);
     
-    if (userRecord && verifyPassword(password, userRecord.password) {
-        let session = await user.createSession(userRecord._id);
-        return session.insertedId;
+    if (!userRecord) {
+        return { error: "Invalid email or password." };
     }
-    return { error: "Invalid credentials" };
+
+    // Hash the provided password
+    const hash = crypto.createHash('sha256').update(password).digest('hex');
+
+    if (userRecord.password !== hash) {
+        return { error: "Invalid email or password." };
+    }
+
+    // Generate session
+    const sessionKey = crypto.randomUUID();
+    const sessionData = {
+        key: sessionKey,
+        expiry: new Date(Date.now() + 1000 * 60 * 30), // 30 minutes
+        data: { username: userRecord.username,
+            email: userRecord.email,
+            role: userRecord.role,
+            profilePicture: userRecord.profilePicture,
+        },
+    };
+
+    await user.startSession(sessionData);
+
+    return sessionData;
 }
 
-
-/**
- * Registers a new user and sends a verification email.
- * @param {string} username - The username of the new user.
- * @param {string} email - The email address of the new user.
- * @param {string} password - The plaintext password of the new user.
- * @param {string} role - The role of the new user (e.g., "user" or "admin").
- * @returns {Promise<Object>} A message indicating success or an error message if registration fails.
- */
-async function registerUser(username, email, password, role) {
-    try {
-        const hashedPassword = hashPassword(password);
-        const verificationToken = uuidv4();
-        const newUser = {
-            username,
-            email,
-            password: hashedPassword,
-            role,
-            isVerified: false,
-            verificationToken
-        };
-
-        await user.createUser(newUser);
-        await sendVerificationEmail(email, verificationToken);
-        return { message: "User registered successfully. Please check your email to verify your account." };
-    } catch (error) {
-        return { error: "Failed to register user. Please try again later." };
+async function updateProfilePicture(username, profilePicturePath) {
+    // Update the user's profile picture path (this function doesnt work yet)
+    const userRecord = await user.getUserDetails(username);
+    if (!userRecord) {
+        return { error: "User not found" };
     }
+
+    await user.updateUser(username, { profilePicture: profilePicturePath });
+    return { message: "Profile picture updated successfully" };
 }
 
-
-/**
- * Verifies a user's account using a verification token.
- * @param {string} verificationToken - The verification token sent to the user's email.
- * @returns {Promise<Object>} A message indicating success or an error message if verification fails.
- */
-async function verifyUser(verificationToken) {
-    try {
-        const userRecord = await user.findUserByVerificationToken(verificationToken);
-        if (userRecord) {
-            await user.updateUserVerification(userRecord._id);
-            return { message: "User verified successfully." };
-        }
-        return { error: "Invalid or expired verification token." };
-    } catch (error) {
-        return { error: "Failed to verify user. Please try again later." };
+async function terminateSession(key) {
+    if (!key) {
+        return
     }
+    await user.terminateSession(key)
 }
 
-
-/**
- * Resets a user's password by updating it with a new hashed password.
- * @param {string} email - The user's email.
- * @param {string} newPassword - The new plaintext password.
- * @returns {Promise<Object>} A message indicating success or an error message if reset fails.
- */
-async function resetPassword(email, newPassword) {
-    try {
-        const userRecord = await user.findUserByEmail(email);
-        if (userRecord) {
-            const hashedPassword = hashPassword(newPassword);
-            await user.updateUserPassword(userRecord._id, hashedPassword);
-            return { message: "Password reset successfully." };
-        }
-        return { error: "User not found." };
-    } catch (error) {
-        return { error: "Failed to reset password. Please try again later." };
-    }
+async function getSession(key) {
+    const session = await user.getSession(key);
+    return session;
 }
 
+async function resetPassword(email) { //i cant get this funtion to work plz send help
+    let details = await user.getUserByEmail(email)
+    if (details) {
+        let key = crypto.randomUUID()
+        details.resetkey = key
+        await user.updateUser(details)
+        
+        let transporter = nodemailer.createTransport({
+            host: "127.0.0.1",
+            port: 25
+        })
 
-/**
- * Looks up a session by its ID, and if the session is valid, 
- * fetches the user associated with the session's user ID. Returns the user 
- * record or null if no session or user is found.
- *
- * @param {string} sessionId - The ID of the session to look up.
- * @returns {Promise<Object|null>} Resolves to the user record (plain object) if found, 
- * or `null` if no session or user is associated with the given session ID.
- * @throws {Error} Throws an error if the database query fails or encounters an unexpected issue.
- */
-async function getUserBySession(sessionId) {
-    try {
-        const session = await user.findSessionById(sessionId); // Finds session by ID
-        console.log("Session found:", session);
-
-        if (session) {
-            const userRecord = await user.findUserById(new ObjectId(session.userId)); // Finds user by userId in the session
-            console.log("User record found:", userRecord);
-
-            return userRecord; // Return the user record (plain object)
-        }
-
-        return null; // No session found
-    } catch (error) {
-        console.error("Error in getUserBySession:", error);
-        throw error;
+        let body = `
+        A password reset request has been made for your account.  Please
+        follow <a href="http://127.0.0.1:8000/reset-password/?key=${key}">this link</a>
+        to set a new password for your account.`
+        await transporter.sendMail({
+            from: "?????",
+            to: email,
+            subject: "Password reset",
+            html: body
+        })
+        console.log(body)
     }
+    return undefined
 }
 
+async function checkReset(key) {
+    return user.checkReset(key)
+}
+
+async function setPassword(key, pw) {
+    let hash = crypto.createHash('sha256')
+    hash.update(pw)
+    let hashed_pw = hash.digest('hex')
+
+    await user.updatePassword(key, hashed_pw)
+}
+
+//doesnt send and email to verify registration...
+async function registerUser(username, email, password, role, profilePicturePath = '') {
+    const userRecord = await user.findUserByEmail(email);
+    if (userRecord) {
+        return { error: "Email already registered" };
+    }
+
+    const newUser = {
+        username,
+        email,
+        password,
+        role,
+        profilePicture: profilePicturePath,  // Save the profile picture path if provided
+    };
+
+    await user.createUser(newUser,  profilePicturePath);
+    return { message: "User registered successfully" };
+}
 
 module.exports = {
     login,
-    registerUser,
-    verifyUser,
     resetPassword,
-    getUserBySession // Expose this function
+    setPassword,
+    checkReset,
+    getSession,
+    terminateSession,
+    registerUser,
+    updateProfilePicture
+
 };
