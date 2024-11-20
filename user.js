@@ -16,11 +16,78 @@ async function connectToDatabase() {
     }
 }
 
-async function createUser(user) {
+async function getUserDetails(username) {
+    await connectToDatabase()
+    let result = await usersCollection.findOne({username :username})
+    return result
+}
+
+async function findUserByEmail(email) {
     await connectToDatabase();
     try {
-        // Hash the password before saving the user
-        user.password = await bcrypt.hash(user.password, 10);
+        return await usersCollection.findOne({email : email });
+    } catch (error) {
+        console.error("Error finding user by email:", error);
+        throw error;
+    }
+}
+
+async function checkReset(key) {
+    await connectToDatabase()
+    let result = await usersCollection.findOne({resetkey: key})
+    return result
+}
+
+async function updateUser(user, updates) {
+    await connectToDatabase()
+    if (updates.profilePicture) {
+        updates.profilePicture = updates.profilePicture;  // Update with the new profile picture path
+    }
+    return await usersCollection.updateOne({ username }, { $set: updates });
+}
+
+async function updatePassword(key, pw) {
+    await connectToDatabase()
+    const hashedPassword = await bcrypt.hash(pw, 10);
+    let user = await usersCollection.findOne({resetkey: key})
+    user.password = hashedPassword
+    delete user.resetkey
+    await usersCollection.replaceOne({email:user.email}, user)
+}
+
+async function startSession(sd) {
+    await connectToDatabase()
+    await sessionsCollection.insertOne(sd)
+}
+
+async function updateSession(key, data) {
+    await connectToDatabase()
+    await sessionsCollection.replaceOne({key: key}, data)
+}
+
+async function getSession(key) {
+    await connectToDatabase()
+    let result = await sessionsCollection.findOne({key: key})
+    return result
+}
+
+async function terminateSession(key) {
+    await connectToDatabase()
+    await sessionsCollection.deleteOne({key: key})
+}
+async function createUser(user, profilePicturePath = '') {
+    await connectToDatabase();
+    try {
+        // Hash the password using crypto's SHA-256
+        const hash = crypto.createHash('sha256');
+        hash.update(user.password);
+        user.password = hash.digest('hex'); // Store the hashed password as a hex string
+
+        // If a profile picture is provided, save the path
+        if (profilePicturePath) {
+            user.profilePicture = profilePicturePath; // Store the profile picture path in the user object
+        }
+
         return await usersCollection.insertOne(user);
     } catch (error) {
         console.error("Error creating user:", error);
@@ -28,79 +95,15 @@ async function createUser(user) {
     }
 }
 
-async function findUserByEmail(email) {
-    await connectToDatabase();
-    try {
-        return await usersCollection.findOne({ email });
-    } catch (error) {
-        console.error("Error finding user by email:", error);
-        throw error;
-    }
-}
-
-async function updateUserVerification(userId) {
-    await connectToDatabase();
-    try {
-        return await usersCollection.updateOne({ _id: ObjectId(userId) }, { $set: { isVerified: true } });
-    } catch (error) {
-        console.error("Error updating user verification:", error);
-        throw error;
-    }
-}
-
-async function createSession(userId) {
-    await connectToDatabase();
-    try {
-        const session = await sessionsCollection.insertOne({
-            userId: ObjectId(userId),
-            createdAt: new Date()
-        });
-        return session;
-    } catch (error) {
-        console.error("Error creating session:", error);
-        throw error;
-    }
-}
-
-async function findUserByVerificationToken(verificationToken) {
-    await connectToDatabase();
-    try {
-        return await usersCollection.findOne({ verificationToken });
-    } catch (error) {
-        console.error("Error finding user by verification token:", error);
-        throw error;
-    }
-}
-
-
-async function updateUserPassword(userId, newPassword) {
-    await connectToDatabase();
-    try {
-        // Hash the new password before updating
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        return await usersCollection.updateOne({ _id: ObjectId(userId) }, { $set: { password: hashedPassword } });
-    } catch (error) {
-        console.error("Error updating user password:", error);
-        throw error;
-    }
-}
-async function findSessionById(sessionId) {
-    await connectToDatabase();
-    return sessionsCollection.findOne({ _id: ObjectId(sessionId) });
-}
-
-async function findUserById(userId) {
-    await connectToDatabase();
-    return usersCollection.findOne({ _id: ObjectId(userId) });
-}
-
 module.exports = {
     createUser,
     findUserByEmail,
-    updateUserVerification,
-    createSession,
-    findUserByVerificationToken,
-    updateUserPassword,
-    findSessionById,
-    findUserById
+    terminateSession,
+    getSession,
+    updateSession,
+    startSession,
+    updatePassword,
+    updateUser,
+    checkReset,
+    getUserDetails
 };
