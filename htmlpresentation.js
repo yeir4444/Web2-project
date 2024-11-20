@@ -4,7 +4,7 @@ const express=require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { engine } = require('express-handlebars');
-const multer = require('multer');
+const multer = require('multer'); // idk if we are allowed to use this 
 const app = express();
 
 // Middleware setup
