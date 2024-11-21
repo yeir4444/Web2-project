@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Verification</title>
+    
+    <!-- CoreUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui/dist/css/coreui.min.css" rel="stylesheet">
+    
+    <!-- CoreUI Icons (Optional, if you plan to use icons) -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/icons/css/coreui-icons.min.css" rel="stylesheet">
+</head>
+<body class="c-app flex-row align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <!-- Card for Verification Message -->
+                <div class="card">
+                    <div class="card-body">
+                        {{#if error}}
+                            <div class="alert alert-danger" role="alert">
+                                <strong>Error:</strong> {{error}}
+                            </div>
+                        {{else}}
+                            <div class="alert alert-success" role="alert">
+                                <strong>Success:</strong> {{message}}
+                            </div>
+                        {{/if}}
+                        <div class="text-center mt-4">
+                            <a href="/login" class="btn btn-primary">Go to Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CoreUI JS (Optional, if you need JavaScript functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui/dist/js/coreui.bundle.min.js"></script>
+</body>
+</html>
