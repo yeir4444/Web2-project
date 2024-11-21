@@ -1,17 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account</title>
-    <link rel="stylesheet" href="/styles.css">
+    <!-- CoreUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/css/coreui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css"> <!-- Your custom styles if needed -->
 </head>
-<body>
+
+<body class="c-app flex-row align-items-center"> <!-- Add CoreUI layout classes -->
+
     <div class="container">
-        <h2>Welcome, {{user.username}}!</h2>
-        <p>Email: {{user.email}}</p>
-        <p>Role: {{user.role}}</p>
-        <a href="/logout">Logout</a>
+        <!-- Account information -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center mb-4">Welcome, {{user.username}}!</h2>
+                <!-- CoreUI utility classes for text centering and margins -->
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{user.email}}</p>
+                <p><strong>Role:</strong> {{user.role}}</p>
+                {{!-- {{#if user.profilePicture}}
+                <img src="{{user.profilePicture}}" alt="Profile Picture" style="width: 150px; height: 150px;">
+                {{else}}
+                <p>No profile picture uploaded.</p>
+                {{/if}}
+                <form action="/upload-profile-picture" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+                    <label for="profilePicture">Upload Profile Picture:</label>
+                    <input type="file" id="profilePicture" name="profilePicture" accept="image/*" required>
+                    <button type="submit">Upload</button>
+                </form> --}}
+                <!-- Logout link styled as a CoreUI button -->
+                <a href="/logout" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
     </div>
+
+    <!-- CoreUI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
+
 </body>
+
 </html>
