@@ -1,5 +1,4 @@
 const { MongoClient, ObjectId } = require("mongodb");
-const bcrypt = require('bcrypt');
 
 let client;
 let db;
@@ -48,11 +47,13 @@ async function updateUser(user, updates) {
 
 async function updatePassword(key, pw) {
     await connectToDatabase()
-    const hashedPassword = await bcrypt.hash(pw, 10);
-    let user = await usersCollection.findOne({resetkey: key})
-    user.password = hashedPassword
-    delete user.resetkey
-    await usersCollection.replaceOne({email:user.email}, user)
+    const user = await usersCollection.findOne({ resetkey: key });
+    if (user) {
+        user.password = newPassword;
+        delete user.resetkey;
+        delete user.resetkeyExpiry;
+        await usersCollection.replaceOne({ email: user.email }, user);
+    }
 }
 
 async function startSession(sd) {
