@@ -4,23 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration</title>
-    <link rel="stylesheet" href="/styles.css">
+    <!-- CoreUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/css/coreui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css"> <!-- Your custom styles if needed -->
 </head>
-<body>
+<body class="c-app flex-row align-items-center"> <!-- Add CoreUI layout classes for centering -->
+
     <div class="container">
-        <h2>Registration</h2>
-        <form action="/registration" method="POST">
-            <input type="hidden" name="_csrf" value="{{csrfToken}}">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
-            <input type="text" name="role" placeholder="Role" required>
-            <button type="submit">Register</button>
-            <p><a href="/login">Already have an account?</a></p>
-            {{#if error}}<p class="error">{{error}}</p>{{/if}}
-            {{#if message}}<p class="message">{{message}}</p>{{/if}}
-        </form>
+        <!-- Registration form inside a card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center mb-4">Registration</h2> <!-- Text centered -->
+            </div>
+            <div class="card-body">
+                <form action="/registration" method="POST">
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" name="username" id="username" class="form-control" placeholder="Username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" id="email" class="form-control" placeholder="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm Password</label>
+                        <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="Confirm Password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <input type="text" name="role" id="role" class="form-control" placeholder="Role" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Register</button> <!-- Full width button -->
+                </form>
+                <p class="text-center mt-3"><a href="/login">Already have an account? Login</a></p> <!-- Link to login page -->
+
+                <!-- Conditional messages (error or success) -->
+                {{#if error}}<p class="text-danger">{{error}}</p>{{/if}}
+                {{#if message}}<p class="text-success">{{message}}</p>{{/if}}
+            </div>
+        </div>
     </div>
+
+    <!-- CoreUI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
+
 </body>
 </html>
