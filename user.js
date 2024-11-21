@@ -33,16 +33,16 @@ async function findUserByEmail(email) {
 }
 
 async function checkReset(key) {
-    await connectToDatabase()
-    let result = await usersCollection.findOne({resetkey: key})
-    return result
+    await connectToDatabase();
+    let result = await usersCollection.findOne({resetkey: key});
+    return result;
 }
 
 async function updateUser(user, updates) {
-    await connectToDatabase()
+    await connectToDatabase();
     if (updates.profilePicture) {
         updates.profilePicture = updates.profilePicture;  // Update with the new profile picture path
-    }
+    };
     return await usersCollection.updateOne({ username }, { $set: updates });
 }
 
@@ -83,6 +83,8 @@ async function createUser(user, profilePicturePath = '') {
         hash.update(user.password);
         user.password = hash.digest('hex'); // Store the hashed password as a hex string
 
+        user.verificationToken = crypto.randomUUID();
+        user.verificationTokenExpiry = new Date (Date.now()+ 1000 * 60 * 50 * 24); //24 hours expiry
         // If a profile picture is provided, save the path
         if (profilePicturePath) {
             user.profilePicture = profilePicturePath; // Store the profile picture path in the user object
@@ -95,6 +97,24 @@ async function createUser(user, profilePicturePath = '') {
     }
 }
 
+async function verifyUser(token){
+    await connectToDatabase();
+    const user = await usersCollection.findOne ({
+        verificationToken: token
+    });
+    if (user && new Date(user.verificationTokenExpiry) > new Date()){
+        await usersCollection.updateOne({verificationToken: token}, { $set: {verified: true}, $unset: {
+            verificationToken : "", verificationTokenExpiry: ""
+        }});
+        return true;
+    }
+    return false;
+}
+
+async function findUserByResetToken(token) {
+    await connectToDatabase();
+    return await usersCollection.findOne({ resetkey: token });
+}
 module.exports = {
     createUser,
     findUserByEmail,
@@ -105,5 +125,7 @@ module.exports = {
     updatePassword,
     updateUser,
     checkReset,
-    getUserDetails
+    getUserDetails,
+    verifyUser,
+    findUserByResetToken
 };
