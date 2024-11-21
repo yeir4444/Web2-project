@@ -1,44 +1,173 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+    background-color: #f8f9fa; /* Light background color */
+    font-family: Arial, sans-serif; /* Change font for better readability */
+    color: #333; /* Set a default text color */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
 }
 
 .container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 2em;
-    background-color: #ffffff;
+    max-width: 450px;
+    padding: 20px;
+    background-color: #ffffff; /* White background for the form container */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 50px; /* Add some space from the top */
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #007bff; /* CoreUI primary color */
+    color: #fff; /* White text color */
+    text-align: center;
+    padding: 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px; /* Space between heading and form */
+}
+
+/* Form Input Styles */
+.form-control {
+    height: 45px;
     border-radius: 5px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    margin-bottom: 15px; /* Space between form fields */
 }
 
-input, button {
-    width: 100%;
+input[type="email"],
+input[type="text"],
+input[type="password"] {
+    width: 100%; /* Full-width inputs */
     padding: 10px;
-    margin: 8px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
-button {
-    background-color: #007bff;
-    color: white;
-    font-size: 16px;
+/* Button Styles */
+.btn-primary {
+    background-color: #007bff; /* CoreUI primary color */
+    color: #fff;
+    font-size: 1rem;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    width: 100%; /* Full-width button */
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #0056b3;
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+/* Links */
+.text-center a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 1rem;
+}
+
+.text-center a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+/* Error and Success Messages */
+.text-danger {
+    color: #dc3545; /* Red color for error messages */
+    font-size: 1rem;
+}
+
+.text-success {
+    color: #28a745; /* Green color for success messages */
+    font-size: 1rem;
+}
+
+.error, .message {
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Adjust for Small Screens (Responsive) */
+@media (max-width: 768px) {
+    .container {
+        margin-top: 20px; /* Less margin on small screens */
+        padding: 15px;
+    }
+
+    h2 {
+        font-size: 1.3rem; /* Slightly smaller font size */
+    }
+}
+
+.card-header {
+    background-color: #007bff; 
+}
+
+.card-body {
+    background-color: #f7f7f7;
+}
+
+.card:hover {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+button[type="submit"] {
+    padding: 12px 25px;
+    background-color: #007bff;
+    border-radius: 5px;
+    color: #fff;
+    width: 100%;
+    border: none;
+}
+
+button[type="submit"]:hover {
+    background-color: #28a745;
+}
+
+a {
+    color: #007bff;
+    font-size: 0.9rem;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 .error {
-    color: red;
-    font-size: 0.9em;
+    color: #dc3545;
+    font-size: 0.9rem;
 }
 
 .message {
-    color: green;
-    font-size: 0.9em;
+    color: #28a745;
+    font-size: 0.9rem;
+}
+
+/* General Spacing */
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+/* Adding spacing to the links at the bottom */
+.text-center {
+    text-align: center;
+}
+
+.text-center p {
+    margin-top: 15px;
 }
