@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer')
 
 async function login(email, password) {
     const userRecord = await user.findUserByEmail(email);
-    
+
     if (!userRecord) {
         return { error: "Invalid email or password." };
     }
@@ -21,7 +21,8 @@ async function login(email, password) {
     const sessionData = {
         key: sessionKey,
         expiry: new Date(Date.now() + 1000 * 60 * 30), // 30 minutes
-        data: { username: userRecord.username,
+        data: {
+            username: userRecord.username,
             email: userRecord.email,
             role: userRecord.role,
             profilePicture: userRecord.profilePicture,
@@ -34,7 +35,7 @@ async function login(email, password) {
 }
 
 async function updateProfilePicture(username, profilePicturePath) {
-    // Update the user's profile picture path (this function doesnt work yet)
+    // Update the user's profile picture path
     const userRecord = await user.getUserDetails(username);
     if (!userRecord) {
         return { error: "User not found" };
@@ -56,31 +57,20 @@ async function getSession(key) {
     return session;
 }
 
-async function resetPassword(email) { //i cant get this funtion to work plz send help
-    let details = await user.getUserByEmail(email)
+async function resetPassword(email) {
+    let details = await user.findUserByEmail(email);
     if (details) {
-        let key = crypto.randomUUID()
-        details.resetkey = key
-        await user.updateUser(details)
-        
-        let transporter = nodemailer.createTransport({
-            host: "127.0.0.1",
-            port: 25
-        })
+        let key = crypto.randomUUID();
+        details.resetkey = key;
+        details.resetkeyExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours expiry
+        await user.updateUser(details);
 
-        let body = `
-        A password reset request has been made for your account.  Please
-        follow <a href="http://127.0.0.1:8000/reset-password/?key=${key}">this link</a>
-        to set a new password for your account.`
-        await transporter.sendMail({
-            from: "?????",
-            to: email,
-            subject: "Password reset",
-            html: body
-        })
-        console.log(body)
+        const resetLink = `http://127.0.0.1:8000/reset-password?token=${key}`;
+        await sendResetEmail(email, resetLink);
+        return { message: "Password reset link sent successfully. Please check your email." };
     }
-    return undefined
+
+    return { error: "No account found with that email." };
 }
 
 async function checkReset(key) {
@@ -95,7 +85,6 @@ async function setPassword(key, pw) {
     await user.updatePassword(key, hashed_pw)
 }
 
-//doesnt send and email to verify registration...
 async function registerUser(username, email, password, role, profilePicturePath = '') {
     const userRecord = await user.findUserByEmail(email);
     if (userRecord) {
@@ -110,10 +99,62 @@ async function registerUser(username, email, password, role, profilePicturePath 
         profilePicture: profilePicturePath,  // Save the profile picture path if provided
     };
 
-    await user.createUser(newUser,  profilePicturePath);
+    await user.createUser(newUser, profilePicturePath);
+    //Send verification email
+    const verificationLink = `http://127.0.0.1:8000/verify?token=${newUser.verificationToken}`
+    await sendVerificationEmail(email, verificationLink);
     return { message: "User registered successfully" };
 }
 
+async function verifyUser(token) {
+    const result = await user.verifyUser(token);
+    if (result) {
+        return { message: "Account verified successfully." };
+    } else {
+        return { error: "Invalid or expired verification token." };
+    }
+}
+
+async function sendResetEmail(email, link) {
+    let transporter = nodemailer.createTransport({
+        host: "127.0.0.1",
+        port: 25
+    });
+
+    let body = `
+        A password reset request has been made for your account.  Please
+        follow <a href="http://127.0.0.1:8000/reset-password/?key=${key}">this link</a>
+        to set a new password for your account.`
+
+    await transporter.sendMail({
+        from: "no-reply@yourdomain.com",
+        to: email,
+        subject: "Password Reset",
+        html: body
+    });
+}
+
+async function sendVerificationEmail(email, link) {
+    let transporter = nodemailer.createTransport({
+        host: "127.0.0.1",
+        port: 25
+    });
+
+    let body = `
+    Please verify your account by clicking the following link: <a href="${link}">Verify Account</a>
+    `;
+
+    await transporter.sendMail({
+        from: "no-reply@yourdomain.com",
+        to: email,
+        subject: "Account Verification",
+        html: body
+    });
+}
+
+async function findUserByResetToken(token) {
+    return await user.findUserByResetToken(token);
+}
 module.exports = {
     login,
     resetPassword,
@@ -122,6 +163,8 @@ module.exports = {
     getSession,
     terminateSession,
     registerUser,
-    updateProfilePicture
+    updateProfilePicture,
+    verifyUser,
+    findUserByResetToken
 
 };
