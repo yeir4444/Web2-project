@@ -17,7 +17,7 @@
                 <h2 class="text-center mb-4">Registration</h2> <!-- Text centered -->
             </div>
             <div class="card-body">
-                <form action="/registration" method="POST" enctype="multipart/form-data"> <!-- send both text,files(images) to server -->
+                <form action="/registration" method="POST">
                     <input type="hidden" name="_csrf" value="{{csrfToken}}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
@@ -34,21 +34,6 @@
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm Password</label>
                         <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="Confirm Password" required>
-                    </div>
-                    <!-- Languages Fluent In -->
-                    <div class="mb-3">
-                        <label for="fluentLanguages" class="form-label">Languages Fluent In</label>
-                        <input type="text" name="fluentLanguages" id="fluentLanguages" class="form-control" placeholder="e.g., English, Spanish" required>
-                    </div>
-                    <!-- Languages to Learn -->
-                    <div class="mb-3">
-                        <label for="learningLanguages" class="form-label">Languages to Learn</label>
-                        <input type="text" name="learningLanguages" id="learningLanguages" class="form-control" placeholder="e.g., French, German" required>
-                    </div>
-                    <!-- Profile Photo Upload -->
-                    <div class="mb-3">
-                        <label for="profilePhoto" class="form-label">Upload Profile Photo</label>
-                        <input type="file" name="profilePhoto" id="profilePhoto" class="form-control" accept="image/*" required>
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
