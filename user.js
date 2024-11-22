@@ -1,4 +1,5 @@
 const { MongoClient, ObjectId } = require("mongodb");
+const crypto = require('crypto');
 
 let client;
 let db;
