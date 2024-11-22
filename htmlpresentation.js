@@ -7,10 +7,11 @@ const { engine } = require('express-handlebars');
 const fileUpload= require('express-fileupload');
 const app = express();
 
-app.use(fileUpload());
+
 // Middleware setup
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 // Static folder for CSS and other assets
 app.use(express.static(__dirname + '/public'));
@@ -78,7 +79,7 @@ app.get('/account', async (req, res) => {
     }
 
     // Render account page with full user data
-    const user = session.data; // Assuming session.data contains { username, email, role }
+    const user = session.data;
     res.render('account', { user });
 });
 
@@ -86,100 +87,142 @@ app.get('/forgot-password', csrfProtection, (req, res) => {
     res.render("forgot-password", { csrfToken: req.csrfToken() });
 });
 
-
 app.post('/forgot-password', csrfProtection, async (req, res) => {
     const { email } = req.body;
 
-    // Call resetPassword from business.js
-    const result = await business.resetPassword(email);
-    if (result.error) {
-        res.render('forgot-password', { error: result.error, csrfToken: req.csrfToken() });
-    } else {
-        res.send(result.message); // Send message after resetting password
+    if (!email) {
+        return res.render('forgot-password', {
+            error: 'Email is required to reset password.',
+            csrfToken: req.csrfToken(),
+        });
     }
+
+    const result = await business.resetPassword(email);
+
+    if (result.error) {
+        return res.render('forgot-password', { error: result.error, csrfToken: req.csrfToken() });
+    }
+
+    res.render('forgot-password', {
+        message: result.message, // Message: "Password reset link sent successfully"
+        csrfToken: req.csrfToken(),
+    });
 });
 
+app.get('/reset-password', csrfProtection, async (req, res) => {
+    const { token } = req.query;
 
-app.get('/reset-password', csrfProtection, (req, res) => {
-    const token = req.query.token;
+    if (!token) {
+        return res.render('reset-password', {
+            error: 'Invalid reset link.',
+            csrfToken: req.csrfToken(),
+        });
+    }
+
+    const user = await business.findUserByResetToken(token);
+    if (!user || new Date(user.resetkeyExpiry) < new Date()) {
+        return res.render('reset-password', {
+            error: 'Invalid or expired reset token.',
+            csrfToken: req.csrfToken(),
+        });
+    }
+
     res.render('reset-password', { csrfToken: req.csrfToken(), token });
 });
 
 app.post('/reset-password', csrfProtection, async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
+    const { token, newPassword } = req.body;
 
-        if (!token || !newPassword) {
-            return res.render('reset-password', { error: 'Invalid request. Please try again.', csrfToken: req.csrfToken(), token });
-        }
-
-        // Find the user by reset token
-        const user = await business.findUserByResetToken(token);
-        if (!user || new Date(user.resetkeyExpiry) < new Date()) {
-            return res.render('reset-password', { error: 'Invalid or expired reset token.', csrfToken: req.csrfToken(), token });
-        }
-
-        // Hash the new password
-        const hashedPassword = await business.setPassword(token, newPassword);
-
-        // Update the user's password and clear the reset token
-        await business.updateUser(user.username, {
-            password: hashedPassword,
-            resetkey: null,
-            resetkeyExpiry: null,
+    if (!token || !newPassword || newPassword.trim().length === 0) {
+        return res.render('reset-password', {
+            error: 'Invalid request. Please ensure all fields are filled.',
+            csrfToken: req.csrfToken(),
+            token,
         });
+    }
 
-        res.render('login', { message: 'Password reset successfully. Please log in.', csrfToken: req.csrfToken() });
+    const user = await business.findUserByResetToken(token);
+    if (!user || new Date(user.resetkeyExpiry) < new Date()) {
+        return res.render('reset-password', {
+            error: 'Invalid or expired reset token.',
+            csrfToken: req.csrfToken(),
+        });
+    }
+
+    try {
+        await business.setPassword(token, newPassword);
+        res.render('login', {
+            message: 'Password reset successfully. Please log in.',
+            csrfToken: req.csrfToken(),
+        });
     } catch (err) {
         console.error(err);
-        res.render('reset-password', { error: 'An error occurred. Please try again.', csrfToken: req.csrfToken(), token });
+        res.render('reset-password', {
+            error: 'An error occurred while resetting your password.',
+            csrfToken: req.csrfToken(),
+            token,
+        });
     }
 });
 
 app.post('/upload-profile-picture', csrfProtection, async (req, res) => {
-    // Check for valid session
+    if (!req.body._csrf || req.body._csrf !== req.csrfToken()) {
+        return res.status(403).send('Forbidden: Invalid CSRF token');
+    }
+    
     const sessionKey = req.cookies.session;
 
+    // Ensure user is logged in
     if (!sessionKey) {
         return res.redirect('/login');
     }
 
-    // Get the session details
     const session = await business.getSession(sessionKey);
     if (!session) {
         return res.redirect('/login');
     }
 
-    // Get the user details associated with the session
-    const user = await business.getUserDetails(session.data.username);
-    if (!user) {
-        return res.redirect('/login');
+    const username = session.data.username;
+
+    // Check if a file is uploaded
+    if (!req.files || !req.files.profilePicture) {
+        return res.status(400).render('account', {
+            error: 'No file uploaded. Please select a file to upload.',
+            csrfToken: req.csrfToken(),
+        });
     }
 
-    // Check if the file is present
-    if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).send('No file uploaded. Please select a file to upload.');
+    const profilePicture = req.files.profilePicture;
+
+    // Validate file type
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+    const fileExtension = path.extname(profilePicture.name).toLowerCase();
+    if (!allowedExtensions.includes(fileExtension)) {
+        return res.status(400).render('account', {
+            error: 'Invalid file type. Please upload an image file.',
+            csrfToken: req.csrfToken(),
+        });
     }
 
-    // Get the uploaded file
-    let profilePicture = req.files.profilePicture;
+    // Define file upload path
+    const uploadPath = path.join(__dirname, 'public/uploads', `${Date.now()}-${profilePicture.name}`);
 
-    // Define the upload path
-    const uploadPath = __dirname + '/public/uploads/' + Date.now() + '-' + profilePicture.name;
-
-    // Use the mv() method to place the file somewhere on your server
-    profilePicture.mv(uploadPath, async (err) => {
-        if (err) {
-            return res.status(500).send(err);
-        }
-
-        // Update the user's profile with the new picture
+    // Move file to upload directory
+    try {
+        await profilePicture.mv(uploadPath);
         const profilePicturePath = `/uploads/${Date.now()}-${profilePicture.name}`;
-        await business.updateProfilePicture(user.username, profilePicturePath);
 
-        // Redirect back to the account page
+        // Update user's profile picture in the database
+        await business.updateProfilePicture(username, profilePicturePath);
+
         res.redirect('/account');
-    });
+    } catch (err) {
+        console.error('File upload error:', err);
+        return res.status(500).render('account', {
+            error: 'An error occurred while uploading your file. Please try again.',
+            csrfToken: req.csrfToken(),
+        });
+    }
 });
 
 app.get('/verify', async (req, res) => {
@@ -191,6 +234,63 @@ app.get('/verify', async (req, res) => {
     } else {
         res.render('verification', { message: result.message });
     }
+});
+
+app.get('/contacts', csrfProtection, async (req, res) => {
+    const username = req.body.username; 
+    const contacts = await business.getContacts(username);
+    res.render('contacts', { contacts, csrfToken: req.csrfToken() });
+});
+
+app.post('/add-contact', csrfProtection, async (req, res) => {
+    const { username, contactUsername } = req.body;
+    const result = await business.addContact(username, contactUsername);
+
+    if (result.error) {
+        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+    }
+
+    const contacts = await business.getContacts(username);
+    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
+});
+
+app.post('/send-message', csrfProtection, async (req, res) => {
+    const { sender, receiver, content } = req.body;
+    const result = await business.sendMessage(sender, receiver, content);
+
+    if (result.error) {
+        // Render messages view with an error
+        const messages = await business.getMessages(sender, receiver);
+        return res.render('messages', { error: result.error, messages, receiver, csrfToken: req.csrfToken() });
+    }
+
+    // Fetch updated messages
+    const messages = await business.getMessages(sender, receiver);
+    res.render('messages', { message: result.message, messages, receiver, csrfToken: req.csrfToken() });
+});
+
+app.post('/block-user', csrfProtection, async (req, res) => {
+    const { username, blockedUsername } = req.body;
+    const result = await business.blockUser(username, blockedUsername);
+
+    if (result.error) {
+        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+    }
+
+    const contacts = await business.getContacts(username);
+    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
+});
+
+app.post('/unblock-user', csrfProtection, async (req, res) => {
+    const { username, blockedUsername } = req.body;
+    const result = await business.unblockUser(username, blockedUsername);
+
+    if (result.error) {
+        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+    }
+
+    const contacts = await business.getContacts(username);
+    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
 });
 
 // Logout route
