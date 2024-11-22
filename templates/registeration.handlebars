@@ -17,7 +17,7 @@
                 <h2 class="text-center mb-4">Registration</h2> <!-- Text centered -->
             </div>
             <div class="card-body">
-                <form action="/registration" method="POST" enctype="multipart/form-data"> <!-- send both text,files to server -->
+                <form action="/registration" method="POST" enctype="multipart/form-data"> <!-- send both text,files(images) to server -->
                     <input type="hidden" name="_csrf" value="{{csrfToken}}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
@@ -59,7 +59,7 @@
                 <p class="text-center mt-3"><a href="/login">Already have an account? Login</a></p> <!-- Link to login page -->
 
                 <!-- Conditional messages (error or success) -->
-                {{#if error}}<p class="text-danger">{{error}}</p>{{/if}} 
+                {{#if error}}<p class="text-danger">{{error}}</p>{{/if}}
                 {{#if message}}<p class="text-success">{{message}}</p>{{/if}}
             </div>
         </div>
@@ -70,4 +70,3 @@
 
 </body>
 </html>
-
