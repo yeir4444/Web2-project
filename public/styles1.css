@@ -1,0 +1,155 @@
+/* General Page Styles */
+body {
+    background-color: #f4f6f9; /* Subtle gray for better contrast */
+    font-family: 'Roboto', Arial, sans-serif; /* Modern, clean font */
+    color: #333; /* Neutral text color */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Centered container with improved shadow */
+.container {
+    max-width: 900px;
+    width: 90%;
+    padding: 25px;
+    background-color: #ffffff; /* White background */
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Style */
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    background-color: #fff; /* White card background */
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px); /* Subtle hover effect */
+}
+
+/* Card Header with CoreUI styling */
+.card-header {
+    background-color: #007bff; /* CoreUI primary color */
+    color: #fff;
+    text-align: center;
+    padding: 25px 20px;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* Card Body Styling */
+.card-body {
+    padding: 25px;
+    background-color: #f9f9f9; /* Subtle gray background */
+    border-top: 2px solid #f1f1f1;
+}
+
+/* Typography */
+h2, h4, h5 {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #ffffff; /* Slightly darker text */
+}
+
+p {
+    margin: 0;
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Form Input Styles */
+input[type="email"],
+input[type="text"],
+input[type="password"],
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd; /* Subtle border */
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Button Styles */
+button[type="submit"],
+.btn-primary {
+    background-color: #007bff; /* CoreUI primary */
+    color: #fff;
+    font-size: 1rem;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+button[type="submit"]:hover,
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker shade for hover */
+    transform: translateY(-2px); /* Subtle lift */
+}
+
+/* Links */
+a {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Error and Success Messages */
+.text-danger {
+    color: #dc3545;
+    font-size: 0.95rem;
+    margin-top: -15px;
+}
+
+.text-success {
+    color: #28a745;
+    font-size: 0.95rem;
+    margin-top: -15px;
+}
+
+.error,
+.message {
+    text-align: center;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* Adjust for Small Screens (Responsive Design) */
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        padding: 20px;
+    }
+
+    .card-header {
+        font-size: 1.1rem;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+}
