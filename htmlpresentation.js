@@ -86,10 +86,19 @@ app.get('/forgot-password', csrfProtection, (req, res) => {
     res.render("forgot-password", { csrfToken: req.csrfToken() });
 });
 
+
 app.post('/forgot-password', csrfProtection, async (req, res) => {
-    await business.resetPassword(req.body.email);
-    res.send("Check your email for a password reset link.");
+    const { email } = req.body;
+
+    // Call resetPassword from business.js
+    const result = await business.resetPassword(email);
+    if (result.error) {
+        res.render('forgot-password', { error: result.error, csrfToken: req.csrfToken() });
+    } else {
+        res.send(result.message); // Send message after resetting password
+    }
 });
+
 
 app.get('/reset-password', csrfProtection, (req, res) => {
     const token = req.query.token;
