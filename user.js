@@ -5,6 +5,7 @@ let client;
 let db;
 let usersCollection;
 let sessionsCollection;
+let messagesCollection;
 
 async function connectToDatabase() {
     if (!client) {
@@ -38,23 +39,23 @@ async function checkReset(key) {
     return result;
 }
 
-async function updateUser(user, updates) {
+async function updateUser(username, updates) {
     await connectToDatabase();
-    if (updates.profilePicture) {
-        updates.profilePicture = updates.profilePicture;  // Update with the new profile picture path
-    };
-    return await usersCollection.updateOne({ username }, { $set: updates });
+    return await usersCollection.updateOne(
+        { username },
+        { $set: updates }
+    );
 }
 
 async function updatePassword(key, pw) {
     await connectToDatabase()
-    const user = await usersCollection.findOne({ resetkey: key });
-    if (user) {
-        user.password = newPassword;
-        delete user.resetkey;
-        delete user.resetkeyExpiry;
-        await usersCollection.replaceOne({ email: user.email }, user);
-    }
+    await usersCollection.updateOne(
+        { resetkey: key },
+        {
+            $set: { password: hashedPassword },
+            $unset: { resetkey: "", resetkeyExpiry: "" },
+        }
+    );
 }
 
 async function startSession(sd) {
@@ -77,20 +78,20 @@ async function terminateSession(key) {
     await connectToDatabase()
     await sessionsCollection.deleteOne({key: key})
 }
+
 async function createUser(user, profilePicturePath = '') {
     await connectToDatabase();
     try {
-        // Hash the password using crypto's SHA-256
-        const hash = crypto.createHash('sha256');
-        hash.update(user.password);
-        user.password = hash.digest('hex'); // Store the hashed password as a hex string
+        const hash = crypto.createHash('sha256').update(user.password).digest('hex');
+        user.password = hash; // Store hashed password
+
+        user.languagesFluent = user.languagesFluent || []; // List of languages fluent in
+        user.languagesToLearn = user.languagesToLearn || []; // List of languages to learn
+        user.profilePicture = profilePicturePath || '';
 
         user.verificationToken = crypto.randomUUID();
-        user.verificationTokenExpiry = new Date (Date.now()+ 1000 * 60 * 50 * 24); //24 hours expiry
-        // If a profile picture is provided, save the path
-        if (profilePicturePath) {
-            user.profilePicture = profilePicturePath; // Store the profile picture path in the user object
-        }
+        user.verificationTokenExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours expiry
+        user.verified = false;
 
         return await usersCollection.insertOne(user);
     } catch (error) {
@@ -117,6 +118,67 @@ async function findUserByResetToken(token) {
     await connectToDatabase();
     return await usersCollection.findOne({ resetkey: token });
 }
+
+
+async function addContact(username, contactUsername) {
+    await connectToDatabase();
+    const user = await usersCollection.findOne({ username });
+    const contact = await usersCollection.findOne({ username: contactUsername });
+
+    if (!user || !contact) throw new Error("User not found.");
+    if (user.blockedUsers?.includes(contactUsername)) throw new Error("User is blocked.");
+
+    await usersCollection.updateOne(
+        { username },
+        { $addToSet: { contacts: contactUsername } } // Prevent duplicates
+    );
+}
+
+async function removeContact(username, contactUsername) {
+    await connectToDatabase();
+    await usersCollection.updateOne(
+        { username },
+        { $pull: { contacts: contactUsername } } // Remove the contact
+    );
+}
+
+async function sendMessage(sender, receiver, content) {
+    await connectToDatabase();
+    const message = {
+        sender,
+        receiver,
+        content,
+        timestamp: new Date(),
+    };
+    await messagesCollection.insertOne(message);
+}
+
+async function getMessages(user1, user2) {
+    await connectToDatabase();
+    return await messagesCollection.find({
+        $or: [
+            { sender: user1, receiver: user2 },
+            { sender: user2, receiver: user1 },
+        ],
+    }).toArray();
+}
+
+async function blockUser(username, blockedUsername) {
+    await connectToDatabase();
+    await usersCollection.updateOne(
+        { username },
+        { $addToSet: { blockedUsers: blockedUsername } }
+    );
+}
+
+async function unblockUser(username, blockedUsername) {
+    await connectToDatabase();
+    await usersCollection.updateOne(
+        { username },
+        { $pull: { blockedUsers: blockedUsername } }
+    );
+}
+
 module.exports = {
     createUser,
     findUserByEmail,
@@ -129,5 +191,11 @@ module.exports = {
     checkReset,
     getUserDetails,
     verifyUser,
-    findUserByResetToken
+    findUserByResetToken,
+    addContact,
+    removeContact,
+    sendMessage,
+    getMessages,
+    blockUser,
+    unblockUser
 };
