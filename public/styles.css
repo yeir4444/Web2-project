@@ -1,7 +1,7 @@
 body {
-    background-color: #f8f9fa; /* Light background color */
-    font-family: Arial, sans-serif; /* Change font for better readability */
-    color: #333; /* Set a default text color */
+    background-color: #f8f9fa; 
+    font-family: Arial, sans-serif;
+    color: #333;
     margin: 0;
     padding: 0;
     height: 100vh;
@@ -10,10 +10,10 @@ body {
 .container {
     max-width: 450px;
     padding: 20px;
-    background-color: #ffffff; /* White background for the form container */
+    background-color: #ffffff; 
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 50px; /* Add some space from the top */
+    margin-top: 50px; 
 }
 
 .card {
@@ -22,8 +22,8 @@ body {
 }
 
 .card-header {
-    background-color: #007bff; /* CoreUI primary color */
-    color: #fff; /* White text color */
+    background-color: #007bff; 
+    color: #fff; 
     text-align: center;
     padding: 20px;
 }
@@ -34,7 +34,7 @@ body {
 
 h2 {
     font-size: 1.5rem;
-    margin-bottom: 20px; /* Space between heading and form */
+    margin-bottom: 20px; 
 }
 
 /* Form Input Styles */
@@ -42,7 +42,7 @@ h2 {
     height: 45px;
     border-radius: 5px;
     font-size: 1rem;
-    margin-bottom: 15px; /* Space between form fields */
+    margin-bottom: 15px; 
 }
 
 input[type="email"],
@@ -57,18 +57,18 @@ input[type="password"] {
 
 /* Button Styles */
 .btn-primary {
-    background-color: #007bff; /* CoreUI primary color */
+    background-color: #007bff;
     color: #fff;
     font-size: 1rem;
     padding: 12px;
     border: none;
     border-radius: 5px;
-    width: 100%; /* Full-width button */
+    width: 100%;
     cursor: pointer;
 }
 
 .btn-primary:hover {
-    background-color: #0056b3; /* Darker shade on hover */
+    background-color: #0056b3; 
 }
 
 /* Links */
@@ -79,17 +79,17 @@ input[type="password"] {
 }
 
 .text-center a:hover {
-    text-decoration: underline; /* Underline on hover */
+    text-decoration: underline;
 }
 
 /* Error and Success Messages */
 .text-danger {
-    color: #dc3545; /* Red color for error messages */
+    color: #dc3545; 
     font-size: 1rem;
 }
 
 .text-success {
-    color: #28a745; /* Green color for success messages */
+    color: #28a745;
     font-size: 1rem;
 }
 
@@ -98,15 +98,14 @@ input[type="password"] {
     font-weight: bold;
 }
 
-/* Adjust for Small Screens (Responsive) */
 @media (max-width: 768px) {
     .container {
-        margin-top: 20px; /* Less margin on small screens */
+        margin-top: 20px; 
         padding: 15px;
     }
 
     h2 {
-        font-size: 1.3rem; /* Slightly smaller font size */
+        font-size: 1.3rem;
     }
 }
 
@@ -163,7 +162,6 @@ a:hover {
     margin-bottom: 1rem;
 }
 
-/* Adding spacing to the links at the bottom */
 .text-center {
     text-align: center;
 }
