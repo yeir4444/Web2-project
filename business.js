@@ -1,4 +1,5 @@
 const user = require('./user'); // Persistence layer
+const emailUtility = require('./emailUtility');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer')
 
@@ -60,18 +61,23 @@ async function getSession(key) {
 async function resetPassword(email) {
     let details = await user.findUserByEmail(email);
     if (details) {
-        let key = crypto.randomUUID();
+        let key = crypto.randomUUID(); // Generate a reset token
         details.resetkey = key;
-        details.resetkeyExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours expiry
+        details.resetkeyExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours expiry time
         await user.updateUser(details);
 
+        // Generate the reset link
         const resetLink = `http://127.0.0.1:8000/reset-password?token=${key}`;
-        await sendResetEmail(email, resetLink);
+        
+        // Simulate sending password reset email (email sending logic can be called here)
+        await emailUtility.sendPasswordResetEmail(email, key);
+
         return { message: "Password reset link sent successfully. Please check your email." };
     }
 
     return { error: "No account found with that email." };
 }
+
 
 async function checkReset(key) {
     return user.checkReset(key)
@@ -88,9 +94,10 @@ async function setPassword(key, pw) {
 async function registerUser(username, email, password, role, profilePicturePath = '') {
     const userRecord = await user.findUserByEmail(email);
     if (userRecord) {
-        return { error: "Email already registered" };
+        return { error: "Email already registered" };  // If user exists, return an error
     }
 
+    // Create new user object
     const newUser = {
         username,
         email,
@@ -99,12 +106,18 @@ async function registerUser(username, email, password, role, profilePicturePath 
         profilePicture: profilePicturePath,  // Save the profile picture path if provided
     };
 
+    // Create the user in the database
     await user.createUser(newUser, profilePicturePath);
-    //Send verification email
-    const verificationLink = `http://127.0.0.1:8000/verify?token=${newUser.verificationToken}`
-    await sendVerificationEmail(email, verificationLink);
-    return { message: "User registered successfully" };
+
+    // Generate a verification token (to send via email)
+    const verificationLink = `http://127.0.0.1:8000/verify?token=${newUser.verificationToken}`;
+
+    // Simulate sending verification email (email sending logic can be called here)
+    await emailUtility.sendVerificationEmail(email, verificationLink);
+
+    return { message: "User registered successfully. Check your email to verify your account." };
 }
+
 
 async function verifyUser(token) {
     const result = await user.verifyUser(token);
