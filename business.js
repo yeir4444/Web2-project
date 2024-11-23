@@ -195,10 +195,22 @@ async function assignBadges(username) {
     }
 }
 
-async function getContacts(username) {
+async function getContacts(username, userType) {
     try {
-        const user = await user.getUserDetails(username);
-        return user.contacts || [];
+        if (userType === 'contacts') {
+            const user = await user.getUserDetails(username);
+            // Return only the contacts
+            return user.contacts || [];
+        } else if (userType === 'all') {
+            // Return all users 
+            const allUsers = await user.getUsers('', 'all');
+            return allUsers;
+        } else if (userType === 'one') {
+            return await user.getUsers(username, 'one')
+        } else {
+            // Invalid userType
+            return { error: 'Invalid user type' };
+        }
     } catch (error) {
         return { error: error.message };
     }
