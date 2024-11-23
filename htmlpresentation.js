@@ -286,7 +286,7 @@ app.get('/contacts', csrfProtection, async (req, res) => {
         if (!session) return res.redirect('/login');
 
         const username = session.data.username;
-        const contacts = await business.getContacts(usernamem, 'contacts');
+        const contacts = await business.getContacts(username, 'contacts');
 
         if (contacts.error) {
             return res.render('contacts', { error: contacts.error, csrfToken: req.csrfToken() });
