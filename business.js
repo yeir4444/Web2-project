@@ -1,6 +1,6 @@
 const user = require('./user'); // Persistence layer
 const crypto = require('crypto');
-const nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer');
 
 async function login(email, password) {
     const userRecord = await user.findUserByEmail(email);
@@ -26,6 +26,9 @@ async function login(email, password) {
             email: userRecord.email,
             role: userRecord.role,
             profilePicture: userRecord.profilePicture,
+            languagesFluent: userRecord.languagesFluent,
+            languagesToLearn: userRecord.languagesToLearn,
+            contacts: userRecord.contacts,
         },
     };
 
@@ -35,15 +38,23 @@ async function login(email, password) {
 }
 
 async function updateProfilePicture(username, profilePicturePath) {
-    // Update the user's profile picture path
-    const userRecord = await user.getUserDetails(username);
-    if (!userRecord) {
-        return { error: "User not found" };
+    try {
+        await user.updateProfilePicture(username, profilePicturePath);
+    } catch (error) {
+        console.error('Error updating profile picture:', error);
+        throw error;
     }
-
-    await user.updateUser(username, { profilePicture: profilePicturePath });
-    return { message: "Profile picture updated successfully" };
 }
+
+async function updateSession(sessionKey, updatedData) {
+    try {
+        await user.updateSession(sessionKey, updatedData);
+    } catch (error) {
+        console.error('Error updating session:', error);
+        throw error;
+    }
+}
+
 
 async function terminateSession(key) {
     if (!key) {
@@ -164,8 +175,6 @@ async function findUserByResetToken(token) {
 
 
 async function assignBadges(username) {
-    await connectToDatabase();
-
     const messages = await messagesCollection.countDocuments({ sender: username });
     const replies = await messagesCollection.countDocuments({ receiver: username });
 
@@ -175,8 +184,15 @@ async function assignBadges(username) {
 
     await usersCollection.updateOne(
         { username },
-        { $addToSet: { badges: { $each: badges } } } // Prevent duplicate badges
+        { $addToSet: { badges: { $each: badges } } }
     );
+
+    // Update session to reflect new badges
+    const session = await user.getSessionByUsername(username);
+    if (session) {
+        session.data.badges = badges;
+        await user.updateSession(session.key, session);
+    }
 }
 
 async function getContacts(username) {
@@ -245,6 +261,20 @@ async function unblockUser(username, blockedUsername) {
     }
 }
 
+async function updateLanguages(username, fluentLanguages, languagesToLearn) {
+    try {
+        const updates = {
+            languagesFluent: fluentLanguages.split(',').map(lang => lang.trim()),
+            languagesToLearn: languagesToLearn.split(',').map(lang => lang.trim())
+        };
+
+        await user.updateUser(username, updates);
+    } catch (error) {
+        console.error('Error updating languages:', error);
+        throw error;
+    }
+}
+
 
 module.exports = {
     login,
@@ -264,5 +294,7 @@ module.exports = {
     getMessages,
     blockUser,
     unblockUser,
-    getContacts
+    getContacts,
+    updateLanguages,
+    updateSession
 };
