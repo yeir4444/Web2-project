@@ -41,7 +41,6 @@ async function updateProfilePicture(username, profilePicturePath) {
     try {
         await user.updateProfilePicture(username, profilePicturePath);
     } catch (error) {
-        console.error('Error updating profile picture:', error);
         throw error;
     }
 }
@@ -50,7 +49,6 @@ async function updateSession(sessionKey, updatedData) {
     try {
         await user.updateSession(sessionKey, updatedData);
     } catch (error) {
-        console.error('Error updating session:', error);
         throw error;
     }
 }
@@ -165,10 +163,8 @@ async function sendVerificationEmail(email, link) {
 
 async function findUserByResetToken(token) {
     try {
-        console.log("Searching for user with reset token:", token);
         return await user.findUserByResetToken(token);
     } catch (error) {
-        console.error("Error finding user by reset token:", error);
         throw error;
     }
 }
@@ -282,7 +278,6 @@ async function updateLanguages(username, fluentLanguages, languagesToLearn) {
 
         await user.updateUser(username, updates);
     } catch (error) {
-        console.error('Error updating languages:', error);
         throw error;
     }
 }
