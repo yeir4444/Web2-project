@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/styles1.css"> <!-- Your custom styles -->
 </head>
 
-<body class="c-app flex-row align-items-center">
+<body class="c-app flex-row align-items-center account-page">
 
     <div class="container">
         <div class="row">
@@ -82,6 +82,19 @@
         </div>
     </div>
 
+    <div class="sidebar">
+        <h3>All Users</h3>
+        <ul>
+            {{#each usersList}}
+                <li>
+                    <a href="/profile/{{this.username}}">
+                        <img src="{{this.profilePicture}}" alt="{{this.username}}'s profile picture" />
+                        <span>{{this.username}}</span>
+                    </a>
+                </li>
+            {{/each}}
+        </ul>
+    </div>
 
     <!-- CoreUI JS -->
     <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
