@@ -56,8 +56,7 @@ app.get('/login', csrfProtection, (req, res) => res.render('login', { csrfToken:
 
 app.post('/login', csrfProtection, async (req, res) => {
     const { email, password } = req.body;
-
-    // Call the business layer login function
+    
     const session = await business.login(email, password);
 
     if (session.error) {
@@ -88,7 +87,6 @@ app.get('/account', csrfProtection, async (req, res) => {
 app.get('/profile/:username', csrfProtection, async (req, res) => {
     const username = req.params.username;
     
-    // Fetch the user data based on the username
     const user = await business.getContacts(username, 'one');
     if (!user) {
         return res.status(404).send('User not found');
@@ -117,7 +115,7 @@ app.post('/update-languages', csrfProtection, async (req, res) => {
         // Update the user's languages
         await business.updateLanguages(username, fluentLanguages, languagesToLearn);
 
-        res.redirect('/account'); // Redirect back to the account page
+        res.redirect('/account'); 
     } catch (error) {
         console.error('Error updating languages:', error);
         res.status(500).send('Internal Server Error');
@@ -299,10 +297,8 @@ app.get('/contacts', csrfProtection, async (req, res) => {
     }
 });
 
-
-app.post('/add-contact', csrfProtection, async (req, res) => {
+app.get('/add-contact/:username', csrfProtection, async (req, res) => {
     try {
-        const { contactUsername } = req.body;
         const sessionKey = req.cookies.session;
 
         if (!sessionKey) return res.redirect('/login');
@@ -310,11 +306,42 @@ app.post('/add-contact', csrfProtection, async (req, res) => {
         const session = await business.getSession(sessionKey);
         if (!session) return res.redirect('/login');
 
-        const username = session.data.username;
-        const result = await business.addContact(username, contactUsername);
+        const currentUser = session.data.username;
+        const contactUsername = req.params.username;
 
-        const contacts = await business.getContacts(username, 'contacts');
-        res.render('contacts', { message: result.message || result.error, contacts, csrfToken: req.csrfToken() });
+        const result = await business.addContact(currentUser, contactUsername);
+
+        if (result.error) {
+            return res.redirect('/contacts?error=' + encodeURIComponent(result.error));
+        }
+
+        res.redirect('/contacts?message=' + encodeURIComponent(result.message));
+    } catch (error) {
+        console.error("Error adding contact:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post('/add-contact', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const currentUser = session.data.username;
+        const contactUsername = req.body.contactUsername; 
+
+        // Add the contact using your business logic
+        const result = await business.addContact(currentUser, contactUsername);
+
+        if (result.error) {
+            return res.redirect('/contacts?error=' + encodeURIComponent(result.error));
+        }
+
+        res.redirect('/contacts?message=' + encodeURIComponent(result.message));
     } catch (error) {
         console.error("Error adding contact:", error);
         res.status(500).send("Internal Server Error");
@@ -342,6 +369,37 @@ app.post('/remove-contact', csrfProtection, async (req, res) => {
     }
 });
 
+app.get('/message-user/:username', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const currentUser = session.data.username;
+        const targetUser = req.params.username; // Extract username from URL
+
+        const messages = await business.getMessages(currentUser, targetUser);
+
+        if (messages.error) {
+            return res.render('messages', { 
+                error: messages.error, 
+                csrfToken: req.csrfToken() 
+            });
+        }
+
+        res.render('messages', { 
+            contactName: targetUser, 
+            messages, 
+            csrfToken: req.csrfToken() 
+        });
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 app.get('/messages', csrfProtection, async (req, res) => {
     try {
@@ -352,22 +410,25 @@ app.get('/messages', csrfProtection, async (req, res) => {
         const session = await business.getSession(sessionKey);
         if (!session) return res.redirect('/login');
 
-        const username = session.data.username;
-        const { receiver } = req.query;
+        const sender = session.data.username;
+        const receiver = req.query.receiver; // Get receiver from query string
 
-        if (receiver) {
-            // Fetch messages with the selected contact
-            const result = await business.getMessages(username, receiver);
-            res.render('messages', {
-                contactName: receiver,
-                messages: result.messages || [],
-                csrfToken: req.csrfToken()
+        if (!receiver) {
+            return res.render('messages', {
+                contactName: null,
+                messages: [],
+                error: "No contact selected.",
+                csrfToken: req.csrfToken(),
             });
-        } else {
-            // Show the contact list
-            const contacts = await business.getContacts(username, 'contacts');
-            res.render('messages', { contacts, csrfToken: req.csrfToken() });
         }
+
+        const messages = await business.getMessages(sender, receiver);
+
+        res.render('messages', {
+            contactName: receiver,
+            messages,
+            csrfToken: req.csrfToken(),
+        });
     } catch (error) {
         console.error("Error fetching messages:", error);
         res.status(500).send("Internal Server Error");
@@ -385,13 +446,28 @@ app.post('/send-message', csrfProtection, async (req, res) => {
         if (!session) return res.redirect('/login');
 
         const sender = session.data.username;
+
+        // Send the message
         const result = await business.sendMessage(sender, receiver, content);
 
+        // Fetch updated messages after sending
+        const updatedMessages = await business.getMessages(sender, receiver);
+
         if (result.error) {
-            return res.redirect(`/messages?receiver=${receiver}`);
+            return res.render('messages', {
+                contactName: receiver,
+                messages: updatedMessages,
+                error: result.error,
+                csrfToken: req.csrfToken(),
+            });
         }
 
-        res.redirect(`/messages?receiver=${receiver}`);
+        res.render('messages', {
+            contactName: receiver,
+            messages: updatedMessages,
+            message: result.message, // Optional success message
+            csrfToken: req.csrfToken(),
+        });
     } catch (error) {
         console.error("Error sending message:", error);
         res.status(500).send("Internal Server Error");
@@ -422,6 +498,32 @@ app.get('/manage-contacts', csrfProtection, async (req, res) => {
         res.render('manage-contacts', { contacts: contactsWithBlockStatus, csrfToken: req.csrfToken() });
     } catch (error) {
         console.error("Error fetching manage-contacts page:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post('/block-user/:username', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const currentUser = session.data.username;
+        const blockedUsername = req.params.username; // Extract username from URL
+
+        // Block the user using business logic
+        const result = await business.blockUser(currentUser, blockedUsername);
+
+        if (result.error) {
+            return res.redirect('/contacts?error=' + encodeURIComponent(result.error));
+        }
+
+        res.redirect('/contacts?message=' + encodeURIComponent(result.message));
+    } catch (error) {
+        console.error("Error blocking user:", error);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -483,7 +585,7 @@ app.get('/features', async (req, res) => {
         return res.redirect('/login');
     }
 
-    const user = session.data; // Assuming `session.data` contains user details
+    const user = session.data;
 
     res.render('features', { user });
 });
@@ -498,8 +600,7 @@ app.get('/badges', csrfProtection, async (req, res) => {
         if (!session) return res.redirect('/login');
 
         const username = session.data.username;
-
-        // Fetch user details, including badges
+        
         const user = await business.getSession(sessionKey);
         const badges = user?.data?.badges || [];
 
