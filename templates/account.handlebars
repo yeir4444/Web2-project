@@ -22,13 +22,17 @@
                     </div>
                     <div class="card-body text-center">
                         {{#if user.profilePicture}}
-                        <img src="{{user.profilePicture}}" alt="Profile Picture" class="rounded-circle"
-                            style="width: 100px; height: 100px;">
+                        <img 
+            src="{{user.profilePicture}}"  
+            class="rounded-circle"
+            style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #007bff;">
                         {{else}}
                         <p>No profile picture uploaded.</p>
                         {{/if}}
                         <p><strong>Email:</strong> {{user.email}}</p>
                         <p><strong>Role:</strong> {{user.role}}</p>
+                        <p><strong>Fluent in:</strong> {{user.languagesFluent}}</p>
+                        <p><strong>Want to Learn:</strong> {{user.languagesToLearn}}</p>
                         <form action="/upload-profile-picture" method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="_csrf" value="{{csrfToken}}">
                             <div class="mb-3">
@@ -39,6 +43,8 @@
                             <button type="submit" class="btn btn-primary">Upload</button>
                         </form>
                         <a href="/logout" class="btn btn-danger btn-sm mt-4">Logout</a>
+
+                        <a href="/home" class="btn btn-secondary btn-sm mt-4">Go to Home</a>
                     </div>
                 </div>
             </div>
@@ -57,17 +63,19 @@
                                 <div class="me-2 flex-grow-1">
                                     <label for="fluentLanguages" class="form-label">Fluent In:</label>
                                     <input type="text" id="fluentLanguages" name="fluentLanguages" class="form-control"
-                                        value="{{user.languagesFluent}}" placeholder="E.g., English, Spanish">
+                                        value="{{user.languagesFluent}}" placeholder="E.g., English, Spanish" required>
                                 </div>
                                 <div class="me-2 flex-grow-1">
                                     <label for="languagesToLearn" class="form-label">Want to Learn:</label>
                                     <input type="text" id="languagesToLearn" name="languagesToLearn"
                                         class="form-control" value="{{user.languagesToLearn}}"
-                                        placeholder="E.g., French, German">
+                                        placeholder="E.g., French, German" required>
                                 </div>
                                 <button type="submit" class="btn btn-primary align-self-end">Update</button>
                             </form>
+
                         </div>
+
                     </div>
                 </div>
             </div>
