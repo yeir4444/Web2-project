@@ -9,7 +9,7 @@ let messagesCollection;
 
 async function connectToDatabase() {
     if (!client) {
-        client = new MongoClient(''); // change this to your connection string and it should work
+        client = new MongoClient('mongodb+srv://60301815:60301815@60301815.ndtwl.mongodb.net/'); // change this to your connection string and it should work
         await client.connect();
         db = client.db('language_exchange');
         usersCollection = db.collection('users');
@@ -27,7 +27,7 @@ async function getUserDetails(username) {
 async function findUserByEmail(email) {
     await connectToDatabase();
     try {
-        console.log("Finding user by email:", email); 
+        
         return await usersCollection.findOne({email : email });
     } catch (error) {
         console.error("Error finding user by email:", error);
@@ -68,7 +68,6 @@ async function updateProfilePicture(username, profilePicturePath) {
             { $set: { profilePicture: profilePicturePath } }
         );
     } catch (error) {
-        console.error('Error updating profile picture:', error);
         throw error;
     }
 }
@@ -86,7 +85,6 @@ async function updateSession(sessionKey, updatedData) {
             { $set: { data: updatedData } }
         );
     } catch (error) {
-        console.error('Error updating session:', error);
         throw error;
     }
 }
@@ -108,8 +106,8 @@ async function createUser(user, profilePicturePath = '') {
         const hash = crypto.createHash('sha256').update(user.password).digest('hex');
         user.password = hash; // Store hashed password
 
-        user.languagesFluent = user.languagesFluent || []; // List of languages fluent in
-        user.languagesToLearn = user.languagesToLearn || []; // List of languages to learn
+        user.languagesFluent = user.languagesFluent || []; 
+        user.languagesToLearn = user.languagesToLearn || []; 
         user.profilePicture = profilePicturePath || '';
 
         user.verificationToken = crypto.randomUUID();
@@ -118,7 +116,6 @@ async function createUser(user, profilePicturePath = '') {
 
         return await usersCollection.insertOne(user);
     } catch (error) {
-        console.error("Error creating user:", error);
         throw error;
     }
 }
@@ -139,7 +136,6 @@ async function verifyUser(token){
 
 async function findUserByResetToken(token) {
     await connectToDatabase();
-    console.log("Finding user by reset token:", token); // Debug log
     return await usersCollection.findOne({ resetkey: token });
 }
 
@@ -166,24 +162,49 @@ async function removeContact(username, contactUsername) {
 }
 
 async function sendMessage(sender, receiver, content) {
-    await connectToDatabase();
-    const message = {
-        sender,
-        receiver,
-        content,
-        timestamp: new Date(),
-    };
-    await messagesCollection.insertOne(message);
+    if (!content.trim()) {
+        return { error: "Message content cannot be empty." };
+    }
+
+    try {
+        await connectToDatabase();
+
+        // Save the message
+        const result = await messagesCollection.insertOne({
+            sender,
+            receiver,
+            content,
+            timestamp: new Date(),
+        });
+        return { message: "Message sent successfully." };
+    } catch (error) {
+        return { error: "Failed to send message." };
+    }
 }
 
-async function getMessages(user1, user2) {
-    await connectToDatabase();
-    return await messagesCollection.find({
-        $or: [
-            { sender: user1, receiver: user2 },
-            { sender: user2, receiver: user1 },
-        ],
-    }).toArray();
+async function getMessages(sender, receiver) {
+    try {
+        await connectToDatabase();
+        const messages = await messagesCollection
+            .find({
+                $or: [
+                    { sender, receiver },
+                    { sender: receiver, receiver: sender },
+                    {receiver: sender ,sender: receiver }
+                ],
+            })
+            .sort({ timestamp: 1 }) // Sort messages by timestamp
+            .toArray();
+
+        return messages.map(msg => ({
+            text: msg.content,
+            time: msg.timestamp.toLocaleString(),
+            isSent: msg.sender === sender, // Mark messages sent by the sender
+        }));
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        return { error: "Failed to fetch messages." };
+    }
 }
 
 async function blockUser(username, blockedUsername) {
