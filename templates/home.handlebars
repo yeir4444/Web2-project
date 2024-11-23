@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <!-- CoreUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/css/coreui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles1.css"> <!-- Your custom styles -->
+</head>
+
+<body class="c-app flex-row align-items-center">
+    <div class="container">
+        <header class="my-5 text-center">
+            <h1>Welcome to language exchange!</h1>
+            <p>Explore your account, manage settings, and more.</p>
+        </header>
+
+        <div class="row">
+            <!-- Account Management Card -->
+            <div class="col-md-6 col-sm-12 mb-4"> <!-- Adjusted width and added margin for spacing -->
+                <div class="card h-100"> <!-- Added h-100 for equal card heights -->
+                    <div class="card-header text-center">
+                        <h4>Manage Your Account</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <a href="/account" class="btn btn-primary mt-3">Go to Account</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explore Features Card -->
+            <div class="col-md-6 col-sm-12 mb-4">
+                <div class="card h-100">
+                    <div class="card-header text-center">
+                        <h4>Explore Features</h4>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <a href="/features" class="btn btn-primary mt-3">View Features</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CoreUI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
+</body>
+
+</html>
