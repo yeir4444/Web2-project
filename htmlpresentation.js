@@ -76,12 +76,30 @@ app.get('/account', csrfProtection, async (req, res) => {
     const session = await business.getSession(sessionKey);
     if (!session) return res.redirect('/login');
 
+    const allUsers = await business.getContacts('', 'all');
+    
     res.render('account', { 
         user: session.data,
+        usersList: allUsers,
         csrfToken: req.csrfToken()
     });
 });
 
+app.get('/profile/:username', csrfProtection, async (req, res) => {
+    const username = req.params.username;
+    
+    // Fetch the user data based on the username
+    const user = await business.getContacts(username, 'one');
+    if (!user) {
+        return res.status(404).send('User not found');
+    }
+    console.log(await user);
+    
+    res.render('userProfile', { 
+        user: user,
+        csrfToken: req.csrfToken()
+    });
+});
 
 app.post('/update-languages', csrfProtection, async (req, res) => {
     try {
@@ -268,7 +286,7 @@ app.get('/contacts', csrfProtection, async (req, res) => {
         if (!session) return res.redirect('/login');
 
         const username = session.data.username;
-        const contacts = await business.getContacts(username);
+        const contacts = await business.getContacts(usernamem, 'contacts');
 
         if (contacts.error) {
             return res.render('contacts', { error: contacts.error, csrfToken: req.csrfToken() });
@@ -295,7 +313,7 @@ app.post('/add-contact', csrfProtection, async (req, res) => {
         const username = session.data.username;
         const result = await business.addContact(username, contactUsername);
 
-        const contacts = await business.getContacts(username);
+        const contacts = await business.getContacts(username, 'contacts');
         res.render('contacts', { message: result.message || result.error, contacts, csrfToken: req.csrfToken() });
     } catch (error) {
         console.error("Error adding contact:", error);
@@ -316,7 +334,7 @@ app.post('/remove-contact', csrfProtection, async (req, res) => {
         const username = session.data.username;
         const result = await business.removeContact(username, contactUsername);
 
-        const contacts = await business.getContacts(username);
+        const contacts = await business.getContacts(username, 'contacts');
         res.render('contacts', { message: result.message || result.error, contacts, csrfToken: req.csrfToken() });
     } catch (error) {
         console.error("Error removing contact:", error);
@@ -347,7 +365,7 @@ app.get('/messages', csrfProtection, async (req, res) => {
             });
         } else {
             // Show the contact list
-            const contacts = await business.getContacts(username);
+            const contacts = await business.getContacts(username, 'contacts');
             res.render('messages', { contacts, csrfToken: req.csrfToken() });
         }
     } catch (error) {
@@ -392,7 +410,7 @@ app.get('/manage-contacts', csrfProtection, async (req, res) => {
         const username = session.data.username;
 
         // Fetch contacts and block status
-        const contacts = await business.getContacts(username);
+        const contacts = await business.getContacts(username, 'contacts');
         const blockedUsers = session.data.blockedUsers || [];
 
         // Add block status to each contact
