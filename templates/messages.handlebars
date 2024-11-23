@@ -97,7 +97,7 @@
                 <h3>Chat with {{contactName}}</h3>
             </div>
             <div class="chat-body">
-                {{#if messages}}
+                {{#if messages.length}}
                     {{#each messages}}
                         <div class="message {{#if this.isSent}}sent{{else}}received{{/if}}">
                             <p>{{this.text}}</p>
