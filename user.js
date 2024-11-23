@@ -14,6 +14,7 @@ async function connectToDatabase() {
         db = client.db('language_exchange');
         usersCollection = db.collection('users');
         sessionsCollection = db.collection('sessions');
+        messagesCollection = db.collection('messages');
     }
 }
 
@@ -26,6 +27,7 @@ async function getUserDetails(username) {
 async function findUserByEmail(email) {
     await connectToDatabase();
     try {
+        console.log("Finding user by email:", email); 
         return await usersCollection.findOne({email : email });
     } catch (error) {
         console.error("Error finding user by email:", error);
@@ -47,8 +49,8 @@ async function updateUser(username, updates) {
     );
 }
 
-async function updatePassword(key, pw) {
-    await connectToDatabase()
+async function updatePassword(key, hashedPassword) {
+    await connectToDatabase();
     await usersCollection.updateOne(
         { resetkey: key },
         {
@@ -58,14 +60,35 @@ async function updatePassword(key, pw) {
     );
 }
 
+async function updateProfilePicture(username, profilePicturePath) {
+    try {
+        await connectToDatabase()
+        await usersCollection.updateOne(
+            { username },
+            { $set: { profilePicture: profilePicturePath } }
+        );
+    } catch (error) {
+        console.error('Error updating profile picture:', error);
+        throw error;
+    }
+}
+
 async function startSession(sd) {
     await connectToDatabase()
     await sessionsCollection.insertOne(sd)
 }
 
-async function updateSession(key, data) {
-    await connectToDatabase()
-    await sessionsCollection.replaceOne({key: key}, data)
+async function updateSession(sessionKey, updatedData) {
+    try {
+        await connectToDatabase()
+        await sessionsCollection.updateOne(
+            { key: sessionKey },
+            { $set: { data: updatedData } }
+        );
+    } catch (error) {
+        console.error('Error updating session:', error);
+        throw error;
+    }
 }
 
 async function getSession(key) {
@@ -116,9 +139,9 @@ async function verifyUser(token){
 
 async function findUserByResetToken(token) {
     await connectToDatabase();
+    console.log("Finding user by reset token:", token); // Debug log
     return await usersCollection.findOne({ resetkey: token });
 }
-
 
 async function addContact(username, contactUsername) {
     await connectToDatabase();
@@ -197,5 +220,6 @@ module.exports = {
     sendMessage,
     getMessages,
     blockUser,
-    unblockUser
+    unblockUser,
+    updateProfilePicture
 };
