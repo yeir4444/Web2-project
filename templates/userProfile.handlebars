@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,51 +61,66 @@
             background-color: #5a6268;
             transform: scale(1.05);
         }
+
+        .custom-card {
+            max-width: 1000px; /* Optional fixed max-width for extra control */
+        }
     </style>
 </head>
+
 <body>
     <div class="container mt-5">
-        <div class="card">
+        <div class="card custom">
             <div class="card-header bg-primary text-white">
                 <h3 class="card-title">{{user.username}}'s Profile</h3>
             </div>
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <img src="{{user.profilePicture}}" alt="{{user.username}}'s profile picture" 
-                        class="rounded-circle" 
-                        style="width: 150px; height: 150px; object-fit: cover;">
+                    <img src="{{user.profilePicture}}" class="rounded-circle"
+                        style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #007bff;">
                 </div>
-                <h5>Languages Fluent In:</h5>
+                <h3>Languages Fluent In:</h3>
                 {{#if user.languagesFluent.length}}
-                    <ul class="list-group mb-3">
-                        {{#each user.languagesFluent}}
-                            <li class="list-group-item">{{this}}</li>
-                        {{/each}}
-                    </ul>
+                <ul class="list-group mb-3">
+                    {{#each user.languagesFluent}}
+                    <li class="list-group-item">{{this}}</li>
+                    {{/each}}
+                </ul>
                 {{else}}
-                    <p class="text-muted">No languages specified.</p>
+                <p class="text-muted">No languages specified.</p>
                 {{/if}}
 
-                <h5>Languages Wanting to Learn:</h5>
+                <h3>Languages Wanting to Learn:</h3>
                 {{#if user.languagesLearning.length}}
-                    <ul class="list-group">
-                        {{#each user.languagesLearning}}
-                            <li class="list-group-item">{{this}}</li>
-                        {{/each}}
-                    </ul>
+                <ul class="list-group">
+                    {{#each user.languagesLearning}}
+                    <li class="list-group-item">{{this}}</li>
+                    {{/each}}
+                </ul>
                 {{else}}
-                    <p class="text-muted">No languages specified.</p>
+                <p class="text-muted">No languages specified.</p>
                 {{/if}}
             </div>
             <div class="card-footer text-center">
-                <!-- New Buttons -->
-                <a href="/add-contact/{{user.username}}" class="custom-btn custom-btn-success mx-2">Add Contact</a>
-                <a href="/message-user/{{user.username}}" class="custom-btn custom-btn-primary mx-2">Message User</a>
+                <!-- User Actions -->
+                <a href="/add-contact/{{user.username}}" class="custom-btn custom-btn-success mx-2"
+                    aria-label="Add {{user.username}} as a contact">
+                    Add Contact
+                </a>
+                <a href="/message-user/{{user.username}}" class="custom-btn custom-btn-primary mx-2"
+                    aria-label="Message {{user.username}}">
+                    Message User
+                </a>
                 <form action="/block-user/{{user.username}}" method="POST" style="display: inline;">
                     <input type="hidden" name="_csrf" value="{{csrfToken}}">
-                    <button type="submit" class="custom-btn custom-btn-danger mx-2">Block User</button>
+                    <button type="submit" class="custom-btn custom-btn-danger mx-2" aria-label="Block {{user.username}}"
+                        onclick="return confirm('Are you sure you want to block this user?');">
+                        Block User
+                    </button>
                 </form>
-                <a href="/contacts" class="custom-btn custom-btn-secondary mt-3">Back to Contacts</a>
+                <a href="/account" class="custom-btn custom-btn-secondary mt-4" aria-label="Back to contacts">
+                    Back
+                </a>
             </div>
         </div>
     </div>
@@ -112,4 +128,5 @@
     <!-- CoreUI JS -->
     <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.3.3/dist/js/coreui.bundle.min.js"></script>
 </body>
+
 </html>
