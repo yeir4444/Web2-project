@@ -4,14 +4,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { engine } = require('express-handlebars');
-const fileUpload= require('express-fileupload');
+const fileUpload = require('express-fileupload');
+const path = require('path');
+
+
 const app = express();
 
 
 // Middleware setup
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload());
+app.use(fileUpload({ limits: { fileSize: 2 * 1024 * 1024 } })); // 2MB limit
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Static folder for CSS and other assets
 app.use(express.static(__dirname + '/public'));
@@ -65,22 +69,41 @@ app.post('/login', csrfProtection, async (req, res) => {
     res.redirect('/account');
 });
 
-app.get('/account', async (req, res) => {
+app.get('/account', csrfProtection, async (req, res) => {
     const sessionKey = req.cookies.session;
-
-    if (!sessionKey) {
-        return res.redirect('/login'); // No session key
-    }
+    if (!sessionKey) return res.redirect('/login');
 
     const session = await business.getSession(sessionKey);
+    if (!session) return res.redirect('/login');
 
-    if (!session || new Date(session.expiry) < new Date()) {
-        return res.redirect('/login'); // Invalid or expired session
+    res.render('account', { 
+        user: session.data,
+        csrfToken: req.csrfToken()
+    });
+});
+
+
+app.post('/update-languages', csrfProtection, async (req, res) => {
+    try {
+        const { fluentLanguages, languagesToLearn } = req.body;
+        const sessionKey = req.cookies.session;
+
+        // Validate session
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+
+        // Update the user's languages
+        await business.updateLanguages(username, fluentLanguages, languagesToLearn);
+
+        res.redirect('/account'); // Redirect back to the account page
+    } catch (error) {
+        console.error('Error updating languages:', error);
+        res.status(500).send('Internal Server Error');
     }
-
-    // Render account page with full user data
-    const user = session.data;
-    res.render('account', { user });
 });
 
 app.get('/forgot-password', csrfProtection, (req, res) => {
@@ -166,64 +189,63 @@ app.post('/reset-password', csrfProtection, async (req, res) => {
 });
 
 app.post('/upload-profile-picture', csrfProtection, async (req, res) => {
-    if (!req.body._csrf || req.body._csrf !== req.csrfToken()) {
-        return res.status(403).send('Forbidden: Invalid CSRF token');
-    }
-    
-    const sessionKey = req.cookies.session;
-
-    // Ensure user is logged in
-    if (!sessionKey) {
-        return res.redirect('/login');
-    }
-
-    const session = await business.getSession(sessionKey);
-    if (!session) {
-        return res.redirect('/login');
-    }
-
-    const username = session.data.username;
-
-    // Check if a file is uploaded
-    if (!req.files || !req.files.profilePicture) {
-        return res.status(400).render('account', {
-            error: 'No file uploaded. Please select a file to upload.',
-            csrfToken: req.csrfToken(),
-        });
-    }
-
-    const profilePicture = req.files.profilePicture;
-
-    // Validate file type
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
-    const fileExtension = path.extname(profilePicture.name).toLowerCase();
-    if (!allowedExtensions.includes(fileExtension)) {
-        return res.status(400).render('account', {
-            error: 'Invalid file type. Please upload an image file.',
-            csrfToken: req.csrfToken(),
-        });
-    }
-
-    // Define file upload path
-    const uploadPath = path.join(__dirname, 'public/uploads', `${Date.now()}-${profilePicture.name}`);
-
-    // Move file to upload directory
     try {
+        const sessionKey = req.cookies.session;
+        if (!sessionKey) return res.redirect('/login');
+
+        // Get session and user data
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+
+        // Validate uploaded file
+        if (!req.files || !req.files.profilePicture) {
+            return res.status(400).render('account', {
+                error: 'No file uploaded. Please select a file to upload.',
+                csrfToken: req.csrfToken(),
+                user: session.data
+            });
+        }
+
+        const profilePicture = req.files.profilePicture;
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+        const fileExtension = path.extname(profilePicture.name).toLowerCase();
+
+        if (!allowedExtensions.includes(fileExtension)) {
+            return res.status(400).render('account', {
+                error: 'Invalid file type. Please upload an image file.',
+                csrfToken: req.csrfToken(),
+                user: session.data
+            });
+        }
+
+        // Save the uploaded file
+        const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}${fileExtension}`;
+        const uploadPath = path.join(__dirname, 'public/uploads', uniqueFileName);
         await profilePicture.mv(uploadPath);
-        const profilePicturePath = `/uploads/${Date.now()}-${profilePicture.name}`;
 
-        // Update user's profile picture in the database
-        await business.updateProfilePicture(username, profilePicturePath);
+        // Update the user's profile picture in the database
+        const relativePath = `/uploads/${uniqueFileName}`;
+        await business.updateProfilePicture(username, relativePath);
 
-        res.redirect('/account');
-    } catch (err) {
-        console.error('File upload error:', err);
-        return res.status(500).render('account', {
-            error: 'An error occurred while uploading your file. Please try again.',
-            csrfToken: req.csrfToken(),
+        // Update the session data with the new profile picture
+        session.data.profilePicture = relativePath;
+        await business.updateSession(sessionKey, session.data);
+
+        // Render the updated account page
+        res.render('account', {
+            user: session.data,
+            message: 'Profile picture updated successfully!',
+            csrfToken: req.csrfToken()
         });
+    } catch (err) {
+        console.error("Error uploading profile picture:", err);
+        res.status(500).send("Internal Server Error");
     }
 });
+
+
 
 app.get('/verify', async (req, res) => {
     const token = req.query.token;
@@ -237,60 +259,258 @@ app.get('/verify', async (req, res) => {
 });
 
 app.get('/contacts', csrfProtection, async (req, res) => {
-    const username = req.body.username; 
-    const contacts = await business.getContacts(username);
-    res.render('contacts', { contacts, csrfToken: req.csrfToken() });
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        const contacts = await business.getContacts(username);
+
+        if (contacts.error) {
+            return res.render('contacts', { error: contacts.error, csrfToken: req.csrfToken() });
+        }
+
+        res.render('contacts', { contacts, csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error fetching contacts:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
+
 app.post('/add-contact', csrfProtection, async (req, res) => {
-    const { username, contactUsername } = req.body;
-    const result = await business.addContact(username, contactUsername);
+    try {
+        const { contactUsername } = req.body;
+        const sessionKey = req.cookies.session;
 
-    if (result.error) {
-        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        const result = await business.addContact(username, contactUsername);
+
+        const contacts = await business.getContacts(username);
+        res.render('contacts', { message: result.message || result.error, contacts, csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error adding contact:", error);
+        res.status(500).send("Internal Server Error");
     }
+});
 
-    const contacts = await business.getContacts(username);
-    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
+app.post('/remove-contact', csrfProtection, async (req, res) => {
+    try {
+        const { contactUsername } = req.body;
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        const result = await business.removeContact(username, contactUsername);
+
+        const contacts = await business.getContacts(username);
+        res.render('contacts', { message: result.message || result.error, contacts, csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error removing contact:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
+app.get('/messages', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        const { receiver } = req.query;
+
+        if (receiver) {
+            // Fetch messages with the selected contact
+            const result = await business.getMessages(username, receiver);
+            res.render('messages', {
+                contactName: receiver,
+                messages: result.messages || [],
+                csrfToken: req.csrfToken()
+            });
+        } else {
+            // Show the contact list
+            const contacts = await business.getContacts(username);
+            res.render('messages', { contacts, csrfToken: req.csrfToken() });
+        }
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 app.post('/send-message', csrfProtection, async (req, res) => {
-    const { sender, receiver, content } = req.body;
-    const result = await business.sendMessage(sender, receiver, content);
+    try {
+        const { content, receiver } = req.body;
+        const sessionKey = req.cookies.session;
 
-    if (result.error) {
-        // Render messages view with an error
-        const messages = await business.getMessages(sender, receiver);
-        return res.render('messages', { error: result.error, messages, receiver, csrfToken: req.csrfToken() });
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const sender = session.data.username;
+        const result = await business.sendMessage(sender, receiver, content);
+
+        if (result.error) {
+            return res.redirect(`/messages?receiver=${receiver}`);
+        }
+
+        res.redirect(`/messages?receiver=${receiver}`);
+    } catch (error) {
+        console.error("Error sending message:", error);
+        res.status(500).send("Internal Server Error");
     }
+});
 
-    // Fetch updated messages
-    const messages = await business.getMessages(sender, receiver);
-    res.render('messages', { message: result.message, messages, receiver, csrfToken: req.csrfToken() });
+app.get('/manage-contacts', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+
+        // Fetch contacts and block status
+        const contacts = await business.getContacts(username);
+        const blockedUsers = session.data.blockedUsers || [];
+
+        // Add block status to each contact
+        const contactsWithBlockStatus = contacts.map(contact => ({
+            ...contact,
+            isBlocked: blockedUsers.includes(contact.username)
+        }));
+
+        res.render('manage-contacts', { contacts: contactsWithBlockStatus, csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error fetching manage-contacts page:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 app.post('/block-user', csrfProtection, async (req, res) => {
-    const { username, blockedUsername } = req.body;
-    const result = await business.blockUser(username, blockedUsername);
+    try {
+        const { blockedUsername } = req.body;
+        const sessionKey = req.cookies.session;
 
-    if (result.error) {
-        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        await business.blockUser(username, blockedUsername);
+
+        res.redirect('/manage-contacts');
+    } catch (error) {
+        console.error("Error blocking user:", error);
+        res.status(500).send("Internal Server Error");
     }
-
-    const contacts = await business.getContacts(username);
-    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
 });
 
 app.post('/unblock-user', csrfProtection, async (req, res) => {
-    const { username, blockedUsername } = req.body;
-    const result = await business.unblockUser(username, blockedUsername);
+    try {
+        const { blockedUsername } = req.body;
+        const sessionKey = req.cookies.session;
 
-    if (result.error) {
-        return res.render('contacts', { error: result.error, csrfToken: req.csrfToken() });
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+        await business.unblockUser(username, blockedUsername);
+
+        res.redirect('/manage-contacts');
+    } catch (error) {
+        console.error("Error unblocking user:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
+app.get('/home', csrfProtection, (req, res) => {
+    res.render('home', { csrfToken: req.csrfToken(), user: req.user });
+});
+
+app.get('/features', async (req, res) => {
+    const sessionKey = req.cookies.session;
+
+    if (!sessionKey) {
+        return res.redirect('/login');
     }
 
-    const contacts = await business.getContacts(username);
-    res.render('contacts', { message: result.message, contacts, csrfToken: req.csrfToken() });
+    const session = await business.getSession(sessionKey);
+    if (!session) {
+        return res.redirect('/login');
+    }
+
+    const user = session.data; // Assuming `session.data` contains user details
+
+    res.render('features', { user });
+});
+
+app.get('/badges', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+
+        // Fetch user details, including badges
+        const user = await business.getSession(sessionKey);
+        const badges = user?.data?.badges || [];
+
+        res.render('badges', { badges, csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error fetching badges:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+app.post('/assign-badges', csrfProtection, async (req, res) => {
+    try {
+        const sessionKey = req.cookies.session;
+
+        if (!sessionKey) return res.redirect('/login');
+
+        const session = await business.getSession(sessionKey);
+        if (!session) return res.redirect('/login');
+
+        const username = session.data.username;
+
+        // Call the assignBadges function
+        await business.assignBadges(username);
+
+        res.render('badges', { message: "Badges assigned successfully!", csrfToken: req.csrfToken() });
+    } catch (error) {
+        console.error("Error assigning badges:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 // Logout route
@@ -300,7 +520,7 @@ app.get('/logout', async (req, res) => {
         await business.terminateSession(sessionId);
     }
 
-    res.clearCookie("sessionId");
+    res.clearCookie("session");
     res.redirect("/login");
 });
 
