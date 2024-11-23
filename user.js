@@ -202,6 +202,15 @@ async function unblockUser(username, blockedUsername) {
     );
 }
 
+async function getUsers(username, userType) {
+    if (userType === 'all') {
+        const users = await usersCollection.find({}, { username: 1, profilePicture: 1, _id: 0 }).toArray();
+        return users;
+    } else if (userType === 'one') {
+        return await usersCollection.findOne({ username: username }, { projection: { _id: 0, username: 1, profilePicture: 1, languagesFluent: 1, languagesLearning: 1 } });
+    }
+}
+
 module.exports = {
     createUser,
     findUserByEmail,
@@ -221,5 +230,6 @@ module.exports = {
     getMessages,
     blockUser,
     unblockUser,
-    updateProfilePicture
+    updateProfilePicture,
+    getUsers
 };
