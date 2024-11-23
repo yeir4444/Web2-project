@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{user.username}}'s Profile</title>
+    <!-- CoreUI CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.3.3/dist/css/coreui.min.css">
+    <link rel="stylesheet" href="/styles1.css">
+    <style>
+        /* Custom Button Styling */
+        .custom-btn {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-btn-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+
+        .custom-btn-success:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .custom-btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .custom-btn-primary:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .custom-btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .custom-btn-danger:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        .custom-btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+
+        .custom-btn-secondary:hover {
+            background-color: #5a6268;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">{{user.username}}'s Profile</h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img src="{{user.profilePicture}}" alt="{{user.username}}'s profile picture" 
+                        class="rounded-circle" 
+                        style="width: 150px; height: 150px; object-fit: cover;">
+                </div>
+                <h5>Languages Fluent In:</h5>
+                {{#if user.languagesFluent.length}}
+                    <ul class="list-group mb-3">
+                        {{#each user.languagesFluent}}
+                            <li class="list-group-item">{{this}}</li>
+                        {{/each}}
+                    </ul>
+                {{else}}
+                    <p class="text-muted">No languages specified.</p>
+                {{/if}}
+
+                <h5>Languages Wanting to Learn:</h5>
+                {{#if user.languagesLearning.length}}
+                    <ul class="list-group">
+                        {{#each user.languagesLearning}}
+                            <li class="list-group-item">{{this}}</li>
+                        {{/each}}
+                    </ul>
+                {{else}}
+                    <p class="text-muted">No languages specified.</p>
+                {{/if}}
+            </div>
+            <div class="card-footer text-center">
+                <!-- New Buttons -->
+                <a href="/add-contact/{{user.username}}" class="custom-btn custom-btn-success mx-2">Add Contact</a>
+                <a href="/message-user/{{user.username}}" class="custom-btn custom-btn-primary mx-2">Message User</a>
+                <form action="/block-user/{{user.username}}" method="POST" style="display: inline;">
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+                    <button type="submit" class="custom-btn custom-btn-danger mx-2">Block User</button>
+                </form>
+                <a href="/contacts" class="custom-btn custom-btn-secondary mt-3">Back to Contacts</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CoreUI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.3.3/dist/js/coreui.bundle.min.js"></script>
+</body>
+</html>
