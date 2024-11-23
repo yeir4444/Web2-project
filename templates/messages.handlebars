@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.5.0/dist/css/coreui.min.css">
+    <style>
+        .chat-container {
+            max-width: 768px;
+            margin: 0 auto;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        .chat-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .message {
+            margin-bottom: 1rem;
+            max-width: 70%;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+        .message.sent {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        .message.received {
+            background-color: #e9ecef;
+            color: #333;
+            margin-right: auto;
+        }
+        .chat-footer {
+            background-color: #f1f1f1;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            border-top: 1px solid #ccc;
+        }
+        .chat-footer input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+        }
+        .chat-footer button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            background-color: #007bff;
+            color: white;
+        }
+        .contacts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+        .contact-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+        .contact-card:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Conditional Rendering for Contacts or Chat -->
+        {{#if contactName}}
+            <!-- Messaging View -->
+            <div class="chat-header">
+                <h3>Chat with {{contactName}}</h3>
+            </div>
+            <div class="chat-body">
+                {{#if messages}}
+                    {{#each messages}}
+                        <div class="message {{#if this.isSent}}sent{{else}}received{{/if}}">
+                            <p>{{this.text}}</p>
+                            <small>{{this.time}}</small>
+                        </div>
+                    {{/each}}
+                {{else}}
+                    <p class="text-center text-muted">No messages yet. Start the conversation!</p>
+                {{/if}}
+            </div>
+            <div class="chat-footer">
+                <form action="/send-message" method="POST" style="display: flex; width: 100%;">
+                    <input type="hidden" name="_csrf" value="{{csrfToken}}">
+                    <input type="hidden" name="receiver" value="{{contactName}}">
+                    <input type="text" name="content" placeholder="Type a message..." required class="form-control">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+        {{else}}
+            <!-- Contact Selection View -->
+            <div class="chat-header">
+                <h3>Select a Contact</h3>
+            </div>
+            <div class="chat-body contacts-list">
+                {{#if contacts}}
+                    {{#each contacts}}
+                        <div class="contact-card">
+                            <span>{{this.username}}</span>
+                            <form action="/messages" method="GET">
+                                <input type="hidden" name="receiver" value="{{this.username}}">
+                                <button type="submit" class="btn btn-primary btn-sm">Chat</button>
+                            </form>
+                        </div>
+                    {{/each}}
+                {{else}}
+                    <p class="text-center text-muted">No contacts available. Add some first!</p>
+                {{/if}}
+            </div>
+        {{/if}}
+    </div>
+
+    <!-- CoreUI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.5.0/dist/js/coreui.bundle.min.js"></script>
+</body>
+</html>
