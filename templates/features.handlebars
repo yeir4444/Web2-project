@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features</title>
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/css/coreui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/styles1.css">
+</head>
+
+<body class="c-app flex-row align-items-center">
+    <div class="container">
+        <header class="my-5 text-center">
+            <h1>Features</h1>
+            <p>Welcome, {{user.username}}! Explore the features below.</p>
+        </header>
+
+        <div class="row">
+            <!-- Add Contact -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-center">
+                    <div class="card-header">Add Contact</div>
+                    <div class="card-body">
+                        <p>Add a new contact to your list.</p>
+                        <a href="/contacts" class="btn btn-primary">Manage Contacts</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block/Unblock -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-center">
+                    <div class="card-header">Block/Unblock</div>
+                    <div class="card-body">
+                        <p>Block or unblock users.</p>
+                        <a href="/contacts" class="btn btn-warning">Manage Blocking</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messaging -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-center">
+                    <div class="card-header">Messaging Users</div>
+                    <div class="card-body">
+                        <p>Send messages to other users.</p>
+                        <a href="/messages" class="btn btn-success">Start Messaging</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badges -->
+            <div class="col-md-3 col-sm-6">
+                <div class="card text-center">
+                    <div class="card-header">Badges</div>
+                    <div class="card-body">
+                        <p>Earn badges for achievements.</p>
+                        <a href="/badges" class="btn btn-info">View Badges</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
+</body>
+
+</html>
