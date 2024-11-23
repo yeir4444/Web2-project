@@ -1,0 +1,50 @@
+{{!-- badges.handlebars --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Badges</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.5.0/dist/css/coreui.min.css">
+    <link rel="stylesheet" href="/styles1.css">
+</head>
+<body class="c-app">
+    <div class="c-wrapper">
+        <header class="c-header c-header-light c-header-fixed">
+            <div class="container">
+                <h1 class="display-4 text-center my-4">User Badges</h1>
+            </div>
+        </header>
+
+        <div class="c-body">
+            <main class="container my-5">
+                {{#if badges}}
+                    <div class="row">
+                        {{#each badges}}
+                            <div class="col-md-3 mb-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <span class="badge bg-primary text-white fs-5">{{this}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {{/each}}
+                    </div>
+                {{else}}
+                    <div class="alert alert-warning text-center" role="alert">
+                        No badges available at the moment.
+                    </div>
+                {{/if}}
+            </main>
+        </div>
+
+        <footer class="c-footer">
+            <div class="text-center">
+                <a href="/home" class="btn btn-outline-primary mt-3">Back to Home</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.5.0/dist/js/coreui.bundle.min.js"></script>
+</body>
+</html>
