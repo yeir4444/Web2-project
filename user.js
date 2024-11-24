@@ -30,7 +30,6 @@ async function findUserByEmail(email) {
         
         return await usersCollection.findOne({email : email });
     } catch (error) {
-        console.error("Error finding user by email:", error);
         throw error;
     }
 }
@@ -202,7 +201,6 @@ async function getMessages(sender, receiver) {
             isSent: msg.sender === sender, // Mark messages sent by the sender
         }));
     } catch (error) {
-        console.error("Error fetching messages:", error);
         return { error: "Failed to fetch messages." };
     }
 }
