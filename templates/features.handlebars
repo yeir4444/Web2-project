@@ -5,64 +5,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Features</title>
+    <!-- CoreUI CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/css/coreui.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles1.css">
+    <style>
+        /* Additional Styling */
+        .features-header {
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .features-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .features-header p {
+            font-size: 1.2rem;
+            color: #6c757d;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .btn {
+            width: 100%;
+        }
+
+        .row {
+            row-gap: 2rem;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
-<body class="c-app flex-row align-items-center">
+<body class="c-app flex-row align-items-center bg-light">
     <div class="container">
-        <header class="my-5 text-center">
+        <!-- Page Header -->
+        <header class="features-header">
             <h1>Features</h1>
-            <p>Welcome, {{user.username}}! Explore the features below.</p>
+            <p>Welcome, <strong>{{user.username}}</strong>! Explore the features below.</p>
         </header>
 
-        <div class="row">
-            <!-- Add Contact -->
-            <div class="col-md-3 col-sm-6">
+        <!-- Features Section -->
+        <div class="row justify-content-center">
+            <!-- Badges Card -->
+            <div class="col-lg-4 col-md-6 col-sm-12">
                 <div class="card text-center">
-                    <div class="card-header">Add Contact</div>
+                    <div class="card-header bg-info text-white">Badges</div>
                     <div class="card-body">
-                        <p>Add a new contact to your list.</p>
-                        <a href="/contacts" class="btn btn-primary">Manage Contacts</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Block/Unblock -->
-            <div class="col-md-3 col-sm-6">
-                <div class="card text-center">
-                    <div class="card-header">Block/Unblock</div>
-                    <div class="card-body">
-                        <p>Block or unblock users.</p>
-                        <a href="/contacts" class="btn btn-warning">Manage Blocking</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Messaging -->
-            <div class="col-md-3 col-sm-6">
-                <div class="card text-center">
-                    <div class="card-header">Messaging Users</div>
-                    <div class="card-body">
-                        <p>Send messages to other users.</p>
-                        <a href="/messages" class="btn btn-success">Start Messaging</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Badges -->
-            <div class="col-md-3 col-sm-6">
-                <div class="card text-center">
-                    <div class="card-header">Badges</div>
-                    <div class="card-body">
-                        <p>Earn badges for achievements.</p>
+                        <p class="mb-4">Earn badges for achievements.</p>
                         <a href="/badges" class="btn btn-info">View Badges</a>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Back Button -->
+        <div class="text-center back-button">
+            <button onclick="history.back()" class="btn btn-secondary">Back</button>
+        </div>
     </div>
 
+    <!-- CoreUI JS -->
     <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.2.0/dist/js/coreui.bundle.min.js"></script>
 </body>
 
