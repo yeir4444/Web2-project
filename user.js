@@ -140,7 +140,7 @@ async function findUserByResetToken(token) {
 
 async function addContact(username, contactUsername) {
     await connectToDatabase();
-    const user = await usersCollection.findOne({ username });
+    const user = await usersCollection.findOne({ username: username });
     const contact = await usersCollection.findOne({ username: contactUsername });
 
     if (!user || !contact) throw new Error("User not found.");
@@ -150,6 +150,9 @@ async function addContact(username, contactUsername) {
         { username },
         { $addToSet: { contacts: contactUsername } } // Prevent duplicates
     );
+    const updatedUser = await usersCollection.findOne({ username: 'user_username' });
+    // console.log(updatedUser.contacts);
+    return updatedUser;
 }
 
 async function removeContact(username, contactUsername) {
